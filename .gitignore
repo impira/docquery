@@ -5,6 +5,6 @@ venv
 .DS_Store
 __pycache__
 dist
-src/impira.egg-info
+src/docqa.egg-info
 docs
 .vscode/settings.json

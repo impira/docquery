@@ -12,14 +12,17 @@ with open(os.path.join(dir_name, "README.md"), "r", encoding="utf-8") as f:
     long_description = f.read()
 
 install_requires = [
-    "python-dateutil",
-    "pydantic",
-    "requests",
+    "torch >= 1.0",
+    "transformers >= 4.18.0",
+    # TODO: These could potentially be captured as an extra
+    "Pillow",
+    "pytesseract",  # TODO: Test what happens if the host machine does not have tesseract installed
 ]
-if sys.version_info.major == 3 and sys.version_info.minor < 7:
-    install_requires.append("typing")
-
 extras_require = {
+    "dev": [
+        "black",
+        "build",
+    ]
 }
 extras_require["all"] = sorted({package for packages in extras_require.values() for package in packages})
 
