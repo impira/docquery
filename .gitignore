@@ -1,0 +1,10 @@
+venv
+*.swp
+*.swo
+*.pyc
+.DS_Store
+__pycache__
+dist
+src/impira.egg-info
+docs
+.vscode/settings.json
