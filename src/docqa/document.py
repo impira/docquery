@@ -1,5 +1,8 @@
+from io import BytesIO
 from functools import cached_property
 import pathlib
+import pdf2image
+import pdfplumber
 from PIL import Image, UnidentifiedImageError
 from pydantic import validate_arguments
 from typing import List, Tuple
@@ -50,7 +53,34 @@ class Document:
 class PDFDocument(Document):
     @cached_property
     def context(self) -> Tuple[(str, List[int])]:
-        raise NotImplementedError
+        # First, try to extract text directly
+        pdf = pdfplumber.open(BytesIO(self.b))
+        if len(pdf.pages) == 0:
+            return []
+
+        word_boxes = []
+        for i, page in enumerate(pdf.pages):
+            words = page.extract_words()
+            if i == 0 and len(words) == 0:
+                return self.as_image()
+
+            word_boxes.extend(
+                (
+                    w["text"],
+                    transformers.normalize_box([w["x0"], w["top"], w["x1"], w["bottom"]], page.width, page.height),
+                )
+                for w in words
+            )
+        return {"image": None, "word_boxes": word_boxes}
+
+    def as_image(self) -> Tuple[(str, List[int])]:
+        images = pdf2image.convert_from_bytes(self.b)
+
+        word_boxes = []
+        for img in images:
+            words, boxes = apply_tesseract(img, lang=None, tesseract_config="")
+            word_boxes.extend([x for x in zip(words, boxes)])
+        return {"image": None, "word_boxes": word_boxes}
 
 
 class ImageDocument(Document):
@@ -72,8 +102,7 @@ def load_document(fpath: pathlib.Path):
 
     extension = fpath.suffix.split("?")[0].strip()
     if extension in (".pdf"):
-        raise UnsupportedDocument("pdf not yet supported")
-        return PDFDocument(b)
+        return PDFDocument(b.read())
     else:
         try:
             img = Image.open(b)

@@ -14,7 +14,8 @@ with open(os.path.join(dir_name, "README.md"), "r", encoding="utf-8") as f:
 install_requires = [
     "torch >= 1.0",
     "transformers >= 4.18.0",
-    # TODO: These could potentially be captured as an extra
+    "pdf2image",
+    "pdfplumber",
     "Pillow",
     "pydantic",
     "pytesseract",  # TODO: Test what happens if the host machine does not have tesseract installed
