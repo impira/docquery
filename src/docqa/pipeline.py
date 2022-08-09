@@ -4,7 +4,7 @@ from transformers.models.layoutlm.configuration_layoutlm import LayoutLMConfig
 from transformers.pipelines import PIPELINE_REGISTRY
 
 CHECKPOINT = "impira/layoutlm-document-qa"
-REVISION = "3f1b351a6e4c32157b29097b88bbf5c111705a60"
+REVISION = "02daaaf614d4ae08fa6a1d51693baaf7de819585"
 
 
 def get_pipeline(checkpoint=None, revision=None):
