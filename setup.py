@@ -16,13 +16,16 @@ install_requires = [
     "transformers >= 4.18.0",
     # TODO: These could potentially be captured as an extra
     "Pillow",
+    "pydantic",
     "pytesseract",  # TODO: Test what happens if the host machine does not have tesseract installed
+    "requests",
 ]
 extras_require = {
     "dev": [
         "black",
         "build",
-    ]
+    ],
+    "cli": [],
 }
 extras_require["all"] = sorted({package for packages in extras_require.values() for package in packages})
 
