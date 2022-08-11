@@ -52,5 +52,9 @@ def main(args):
         if i > 0 and len(args.questions) > 1:
             print("")
         for q in args.questions:
-            response = nlp(question=q, **d.context)
+            try:
+                response = nlp(question=q, **d.context)
+            except:
+                log.error(f"Failed while processing {str(p)} on question {q}!")
+                raise
             print(f"{str(p):<{max_fname_len}} {q:<{max_question_len}}: {response['answer']}")

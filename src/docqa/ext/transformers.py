@@ -32,10 +32,13 @@ from typing import Optional
 # unecessary dependency.
 def normalize_box(box, width, height):
     return [
-        int(1000 * (box[0] / width)),
-        int(1000 * (box[1] / height)),
-        int(1000 * (box[2] / width)),
-        int(1000 * (box[3] / height)),
+        max(min(c, 1000), 0)
+        for c in [
+            int(1000 * (box[0] / width)),
+            int(1000 * (box[1] / height)),
+            int(1000 * (box[2] / width)),
+            int(1000 * (box[3] / height)),
+        ]
     ]
 
 
