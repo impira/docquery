@@ -1,6 +1,9 @@
 import argparse
 import logging
+import os
 import sys
+
+os.environ["TOKENIZERS_PARALLELISM"] = "false"
 import transformers
 
 from ..pipeline import CHECKPOINT

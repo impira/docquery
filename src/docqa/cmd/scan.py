@@ -37,7 +37,7 @@ def main(args):
     docs = []
     for p in paths:
         try:
-            docs.append((p, load_document(p)))
+            docs.append((p, load_document(str(p))))
             log.info(f"Loading {p}")
         except UnsupportedDocument as e:
             log.warning(f"Cannot load {p}: {e}. Skipping...")
@@ -49,8 +49,8 @@ def main(args):
     max_fname_len = max(len(str(p)) for (p, d) in docs)
     max_question_len = max(len(q) for q in args.questions)
     for i, (p, d) in enumerate(docs):
+        if i > 0 and len(args.questions) > 1:
+            print("")
         for q in args.questions:
             response = nlp(question=q, **d.context)
             print(f"{str(p):<{max_fname_len}} {q:<{max_question_len}}: {response['answer']}")
-        if i > 0:
-            print("")

@@ -8,3 +8,4 @@ dist
 src/docqa.egg-info
 docs
 .vscode/settings.json
+build
