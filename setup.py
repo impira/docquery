@@ -25,6 +25,10 @@ extras_require = {
     "dev": [
         "black",
         "build",
+        "flake8",
+        "flake8-isort",
+        "isort==5.10.1",
+        "pre-commit",
     ],
     "cli": [],
 }
