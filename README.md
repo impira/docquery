@@ -1,8 +1,8 @@
-# DocQA: An easy way to extract information from documents
+# DocQA: Extract information from documents using NLP
 
 DocQA is a library and command-line tool that makes it easy to analyze semi-structured and unstructed documents (PDFs, scanned
-images, etc.) using advanced machine learning. You simply point DocQA at one or more documents and specify a question you want to ask.
-DocQA is created by the team at [Impira](https://www.impira.com/) which is a market leading solution for working with documents.
+images, etc.) using advanced natural language processing (NLP). You simply point DocQA at one or more documents and specify a
+question you want to ask. DocQA is created by the team at [Impira](https://www.impira.com/).
 
 ## Quickstart (CLI)
 
@@ -25,7 +25,8 @@ If you have a folder of documents on your machine, you can run something like
 $ docqa scan "What is the effective date?" /path/to/contracts/folder
 ```
 
-to determine the effective data of every document in the folder.
+to determine the effective date of every document in the folder.
+
 
 ## Quickstart (Library)
 
@@ -52,7 +53,8 @@ and expanding the set of supported documents. We welcome feedback, requests, and
 Under the hood, docqa uses a pre-trained zero-shot language model, based on [LayoutLM](https://arxiv.org/abs/1912.13318), that has been
 fine-tuned for a question-answering task. The model is trained using a combination of [SQuAD2.0](https://rajpurkar.github.io/SQuAD-explorer/)
 and [DocVQA](https://rrc.cvc.uab.es/?ch=17) which make it particularly well suited for complex visual question answering tasks on
-a wide variety of documents. The underlying model is also published on HuggingFace as [impira/layoutlm-document-qa](https://huggingface.co/impira/layoutlm-document-qa) which you can access directly.
+a wide variety of documents. The underlying model is also published on HuggingFace as [impira/layoutlm-document-qa](https://huggingface.co/impira/layoutlm-document-qa)
+which you can access directly.
 
 ## Limitations
 
@@ -67,6 +69,10 @@ DocQA is intended to have a small install footprint and be simple to work with. 
 DocQA is a swiss army knife tool for working with documents and experiencing the power of modern machine learning. You can use it
 just about anywhere, including behind a firewall on sensitive data, and test it with a wide variety of documents. Our hope is that
 DocQA enables many creative use cases for document understanding by making it simple and easy to ask questions from your documents.
+
+When you run DocQA for the first time, it will download some files (e.g. the models and some library code from HuggingFace). However,
+nothing leaves your computer -- the OCR is done locally, models run locally, etc. This comes with the benefit of security and privacy;
+however, it comes at the cost of runtime performance and some accuracy.
 
 If you find yourself wondering how to achieve higher accuracy, work with more file types, teach the model with your own data, have
 a human-in-the-loop workflow, or query the data you're extracting, then do not fear -- you are running into the challenges that
