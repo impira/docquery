@@ -2,6 +2,7 @@ all: build
 
 VERSION=$(shell python  -c 'from src.docqa.version import VERSION; print(VERSION)')
 
+.PHONY: build publish clean
 build:
 	python3 -m build
 
