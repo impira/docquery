@@ -1,8 +1,8 @@
 # DocQA: An easy way to extract information from documents
 
-DocQA is a library and command-line tool that allows you to ask questions from text documents, using pre-trained
-machine learning models. DocQA is created by the team at [Impira](https://www.impira.com/) which is a market leading
-solution for working with documents.
+DocQA is a library and command-line tool that makes it easy to analyze semi-structured and unstructed documents (PDFs, scanned
+images, etc.) using advanced machine learning. You simply point DocQA at one or more documents and specify a question you want to ask.
+DocQA is created by the team at [Impira](https://www.impira.com/) which is a market leading solution for working with documents.
 
 ## Quickstart (CLI)
 
@@ -47,8 +47,8 @@ and expanding the set of supported documents. We welcome feedback, requests, and
 
 ## How it works
 
-Under the hood, docqa uses a pre-trained language model, based on [LayoutLM](https://arxiv.org/abs/1912.13318), that has been
-fine-tuned for question-answering tasks. The model is trained using a combination of [SQuAD2.0](https://rajpurkar.github.io/SQuAD-explorer/)
+Under the hood, docqa uses a pre-trained zero-shot language model, based on [LayoutLM](https://arxiv.org/abs/1912.13318), that has been
+fine-tuned for a question-answering task. The model is trained using a combination of [SQuAD2.0](https://rajpurkar.github.io/SQuAD-explorer/)
 and [DocVQA](https://rrc.cvc.uab.es/?ch=17) which make it particularly well suited for complex visual question answering tasks on
 a wide variety of documents. The underlying model is also published on HuggingFace as [impira/layoutlm-document-qa](https://huggingface.co/impira/layoutlm-document-qa) which you can access directly.
 
