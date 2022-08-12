@@ -2,8 +2,9 @@ import os
 import pathlib
 
 from ..config import get_logger
-from ..document import load_document, UnsupportedDocument
+from ..document import UnsupportedDocument, load_document
 from ..pipeline import get_pipeline
+
 
 log = get_logger("scan")
 

@@ -1,10 +1,11 @@
-from io import BytesIO
-from functools import cached_property
 import os
 import pathlib
-from pydantic import validate_arguments
-import requests
+from functools import cached_property
+from io import BytesIO
 from typing import List, Tuple
+
+import requests
+from pydantic import validate_arguments
 
 from .ext import transformers
 

@@ -277,7 +277,9 @@ class DocumentQuestionAnsweringPipeline(ChunkPipeline):
         for span_idx in range(num_spans):
             if self.framework == "pt":
                 span_encoding = {k: torch.tensor(v[span_idx : span_idx + 1]) for (k, v) in encoding.items()}
-                span_encoding.update({k: v for (k, v) in image_features.items()})  # TODO: Verify cardinality is correct
+                span_encoding.update(
+                    {k: v for (k, v) in image_features.items()}
+                )  # TODO: Verify cardinality is correct
             else:
                 raise ValueError("Unsupported: Tensorflow preprocessing for DocumentQuestionAnsweringPipeline")
 

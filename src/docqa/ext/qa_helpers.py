@@ -7,13 +7,12 @@ from collections.abc import Iterable
 from typing import TYPE_CHECKING, Dict, List, Optional, Tuple, Union
 
 import numpy as np
-
 from transformers.utils import is_pytesseract_available, is_vision_available
+
 
 VISION_LOADED = False
 if is_vision_available():
     from PIL import Image
-
     from transformers.image_utils import load_image
 
     VISION_LOADED = True
