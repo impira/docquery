@@ -11,7 +11,7 @@ repos:
       - id: black
         args:
           - --line-length
-          - '120'
+          - '119'
         files: ./
   - repo: 'https://github.com/PyCQA/isort'
     rev: 5.10.1

@@ -1,6 +1,7 @@
 import os
+
 import setuptools
-import sys
+
 
 dir_name = os.path.abspath(os.path.dirname(__file__))
 
