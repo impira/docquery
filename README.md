@@ -12,8 +12,8 @@ If you want to run OCR on images, then you must also install the [tesseract](htt
 * Mac OS X: `brew install tesseract`
 * Ubuntu: `apt install tesseract-ocr`
 
-`docqa` scan allows you to ask one or more questions to a single document or directory of files. For exmaple, you can
-find the invoice number of [this invoice](https://templates.invoicehome.com/invoice-template-us-neat-750px.png) with
+`docqa` scan allows you to ask one or more questions to a single document or directory of files. For example, you can
+find the invoice number https://templates.invoicehome.com/invoice-template-us-neat-750px.png with
 
 ```bash
 $ docqa scan "What is the invoice number?" https://templates.invoicehome.com/invoice-template-us-neat-750px.png
@@ -22,19 +22,21 @@ $ docqa scan "What is the invoice number?" https://templates.invoicehome.com/inv
 If you have a folder of documents on your machine, you can run something like
 
 ```bash
-$ docqa scan "What is the efefctive date?" /path/to/contracts/folder
+$ docqa scan "What is the effective date?" /path/to/contracts/folder
 ```
+
+to determine the effective data of every document in the folder.
 
 ## Quickstart (Library)
 
-DocQA is also easy to use as a library. It contains two basic abstractions: (1) a `DocumentQuestionAnswering` pipeline
+DocQA can also be used as a library. It contains two basic abstractions: (1) a `DocumentQuestionAnswering` pipeline
 that makes it simple to ask questions of documents and (2) a `Document` abstraction that can parse various types of documents
 to feed into the pipeline.
 
 ```python
 >>> from docqa import document, pipeline
 >>> p = pipeline.get_pipeline()
->>> doc = docqa.document("/path/to/document.pdf")
+>>> doc = document.load_document("/path/to/document.pdf")
 >>> for q in ["What is the invoice number?", "What is the invoice total?"]:
 ...     print(q, p(question=q, **doc.context))
 ```
