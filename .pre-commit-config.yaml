@@ -12,7 +12,7 @@ repos:
         args:
           - --line-length
           - '120'
-        files: src/
+        files: ./
   - repo: 'https://github.com/PyCQA/isort'
     rev: 5.10.1
     hooks:
@@ -20,4 +20,4 @@ repos:
         args:
           - --settings-path
           - .isort.cfg
-        files: src/
+        files: ./

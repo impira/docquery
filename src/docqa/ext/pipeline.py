@@ -4,10 +4,10 @@
 from typing import List, Optional, Tuple, Union
 
 import numpy as np
-
-from transformers.utils import add_end_docstrings, is_torch_available, logging
 from transformers.pipelines.base import PIPELINE_INIT_ARGS, ChunkPipeline
-from .qa_helpers import select_starts_ends, Image, load_image, VISION_LOADED, pytesseract, TESSERACT_LOADED
+from transformers.utils import add_end_docstrings, is_torch_available, logging
+
+from .qa_helpers import TESSERACT_LOADED, VISION_LOADED, Image, load_image, pytesseract, select_starts_ends
 
 
 if is_torch_available():
@@ -277,9 +277,7 @@ class DocumentQuestionAnsweringPipeline(ChunkPipeline):
         for span_idx in range(num_spans):
             if self.framework == "pt":
                 span_encoding = {k: torch.tensor(v[span_idx : span_idx + 1]) for (k, v) in encoding.items()}
-                span_encoding.update(
-                    {k: v for (k, v) in image_features.items()}
-                )  # TODO: Verify cardinality is correct
+                span_encoding.update({k: v for (k, v) in image_features.items()})  # TODO: Verify cardinality is correct
             else:
                 raise ValueError("Unsupported: Tensorflow preprocessing for DocumentQuestionAnsweringPipeline")
 

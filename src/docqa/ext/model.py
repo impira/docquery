@@ -1,4 +1,4 @@
-# NOTE: This code is currently under review for inclusion in the main 
+# NOTE: This code is currently under review for inclusion in the main
 # huggingface/transformers repository:
 # https://github.com/huggingface/transformers/pull/18407
 """ PyTorch LayoutLM model."""
@@ -10,7 +10,6 @@ from typing import Optional, Tuple, Union
 import torch
 from torch import nn
 from torch.nn import CrossEntropyLoss
-
 from transformers.modeling_outputs import QuestionAnsweringModelOutput
 from transformers.models.layoutlm import LayoutLMModel, LayoutLMPreTrainedModel
 
@@ -145,4 +144,3 @@ class LayoutLMForQuestionAnswering(LayoutLMPreTrainedModel):
             hidden_states=outputs.hidden_states,
             attentions=outputs.attentions,
         )
-
