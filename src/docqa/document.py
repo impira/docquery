@@ -1,5 +1,5 @@
+import logging
 import os
-import pathlib
 from functools import cached_property
 from io import BytesIO
 from typing import List, Tuple
@@ -27,49 +27,55 @@ try:
     from PIL import Image, UnidentifiedImageError
 
     PIL_AVAILABLE = True
-except ImportError as e:
+except ImportError:
     pass
 
 try:
-    import pytesseract
+    import pytesseract  # noqa
 
+    pytesseract.get_tesseract_version()
     TESSERACT_AVAILABLE = True
-except ImportError as e:
+except ImportError:
+    pass
+except pytesseract.TesseractNotFoundError as e:
+    logging.warning("Unable to find tesseract: %s." % (e))
     pass
 
 try:
     import pdf2image
 
     PDF_2_IMAGE = True
-except ImportError as e:
+except ImportError:
     pass
 
 try:
     import pdfplumber
 
     PDF_PLUMBER = True
-except ImportError as e:
+except ImportError:
     pass
 
 
 def use_pil():
     if not PIL_AVAILABLE:
-        raise UnsupportedDocument("Unable to import PIL (images will be unavailable): %s", e)
+        raise UnsupportedDocument("Unable to import PIL (images will be unavailable)")
 
 
 def use_tesseract():
     if not TESSERACT_AVAILABLE:
-        raise UnsupportedDocument("Unable to import pytesseract (OCR will be unavailable): %s", e)
+        raise UnsupportedDocument(
+            "Unable to use pytesseract (OCR will be unavailable). Install tesseract to process images with OCR."
+        )
 
 
 def use_pdf2_image():
     if not PDF_2_IMAGE:
-        raise UnsupportedDocument("Unable to import pdf2image (OCR will be unavailable for pdfs): %s", e)
+        raise UnsupportedDocument("Unable to import pdf2image (OCR will be unavailable for pdfs)")
 
 
 def use_pdf_plumber():
     if not PDF_PLUMBER:
-        raise UnsupportedDocument("Unable to import pdfplumber (pdfs will be unavailable): %s", e)
+        raise UnsupportedDocument("Unable to import pdfplumber (pdfs will be unavailable)")
 
 
 def apply_tesseract(*args, **kwargs):

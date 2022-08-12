@@ -1,15 +1,13 @@
-import logging
-
-from transformers import AutoConfig, AutoModelForQuestionAnswering, AutoTokenizer, pipeline
+from transformers import AutoTokenizer, pipeline
 from transformers.models.layoutlm.configuration_layoutlm import LayoutLMConfig
 from transformers.pipelines import PIPELINE_REGISTRY
+
+from .ext.model import LayoutLMForQuestionAnswering
+from .ext.pipeline import DocumentQuestionAnsweringPipeline
 
 
 CHECKPOINT = "impira/layoutlm-document-qa"
 REVISION = "02daaaf614d4ae08fa6a1d51693baaf7de819585"
-
-from .ext.model import LayoutLMForQuestionAnswering
-from .ext.pipeline import DocumentQuestionAnsweringPipeline
 
 
 PIPELINE_REGISTRY.register_pipeline(

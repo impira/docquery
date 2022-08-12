@@ -1,10 +1,13 @@
-import argparse
-import logging
 import os
-import sys
 
 
 os.environ["TOKENIZERS_PARALLELISM"] = "false"
+
+import argparse
+import logging
+import sys
+import textwrap
+
 import transformers
 
 from ..pipeline import CHECKPOINT
@@ -45,7 +48,7 @@ def main(args=None):
     subparsers = parser.add_subparsers(help="sub-command help", dest="subcommand", required=True)
 
     for module in [scan]:
-        cmd_parser = module.build_parser(subparsers, parent_parser)
+        module.build_parser(subparsers, parent_parser)
 
     args = parser.parse_args(args=args)
     level = logging.DEBUG if args.verbose else logging.INFO

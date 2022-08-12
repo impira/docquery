@@ -20,7 +20,7 @@ def build_parser(subparsers, parent_parser):
         "questions", default=[], nargs="+", type=str, help="One or more questions to ask of the documents"
     )
 
-    parser.add_argument("path", type=pathlib.Path, help="The file or directory to scan")
+    parser.add_argument("path", type=str, help="The file or directory to scan")
 
     parser.set_defaults(func=main)
     return parser
@@ -28,7 +28,7 @@ def build_parser(subparsers, parent_parser):
 
 def main(args):
     paths = []
-    if args.path.is_dir():
+    if pathlib.Path(args.path).is_dir():
         for root, dirs, files in os.walk(args.path):
             for fname in files:
                 paths.append(pathlib.Path(root) / fname)
@@ -55,7 +55,7 @@ def main(args):
         for q in args.questions:
             try:
                 response = nlp(question=q, **d.context)
-            except:
+            except Exception:
                 log.error(f"Failed while processing {str(p)} on question {q}!")
                 raise
             print(f"{str(p):<{max_fname_len}} {q:<{max_question_len}}: {response['answer']}")
