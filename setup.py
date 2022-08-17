@@ -14,7 +14,7 @@ with open(os.path.join(dir_name, "README.md"), "r", encoding="utf-8") as f:
 
 install_requires = [
     "torch >= 1.0",
-    "transformers >= 4.18.0",
+    "git+https://github.com/impira/transformers@153d1361c7dcc91c7735cae73e1f594cfcab3e21",
     "pdf2image",
     "pdfplumber",
     "Pillow",
@@ -31,6 +31,10 @@ extras_require = {
         "isort==5.10.1",
         "pre-commit",
         "twine",
+    ],
+    "donut": [
+        "sentencepiece",
+        "protobuf<=3.20.1",
     ],
     "cli": [],
 }

@@ -102,6 +102,7 @@ class PDFDocument(Document):
             return []
 
         word_boxes = []
+        images = pdf2image.convert_from_bytes(self.b)
         for i, page in enumerate(pdf.pages):
             words = page.extract_words()
             if i == 0 and len(words) == 0:
@@ -114,7 +115,7 @@ class PDFDocument(Document):
                 )
                 for w in words
             )
-        return {"image": None, "word_boxes": word_boxes}
+        return {"image": images[0], "word_boxes": word_boxes}
 
     def as_image(self) -> Tuple[(str, List[int])]:
         use_pdf2_image()
@@ -124,7 +125,9 @@ class PDFDocument(Document):
         for img in images:
             words, boxes = apply_tesseract(img, lang=None, tesseract_config="")
             word_boxes.extend([x for x in zip(words, boxes)])
-        return {"image": None, "word_boxes": word_boxes}
+
+        # TODO handle this as multiple inputs
+        return {"image": images[0], "word_boxes": word_boxes}
 
 
 class ImageDocument(Document):
