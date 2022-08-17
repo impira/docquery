@@ -99,35 +99,34 @@ class PDFDocument(Document):
         use_pdf_plumber()
         pdf = pdfplumber.open(BytesIO(self.b))
         if len(pdf.pages) == 0:
-            return []
+            return {}
 
-        word_boxes = []
         images = pdf2image.convert_from_bytes(self.b)
+        if len(images) != len(pdf.pages):
+            raise ValueError(
+                f"Mismatch: pdfplumber() thinks there are {len(pdf.pages)} pages and"
+                f" pdf2image thinks there are {len(images)}"
+            )
+
+        img_words = []
         for i, page in enumerate(pdf.pages):
             words = page.extract_words()
-            if i == 0 and len(words) == 0:
-                return self.as_image()
 
-            word_boxes.extend(
-                (
-                    w["text"],
-                    transformers.normalize_box([w["x0"], w["top"], w["x1"], w["bottom"]], page.width, page.height),
-                )
-                for w in words
-            )
-        return {"image": images[0], "word_boxes": word_boxes}
+            if len(words) == 0:
+                use_tesseract()
+                if TESSERACT_AVAILABLE:
+                    word_boxes = [x for x in zip(*apply_tesseract(images[i], lang=None, tesseract_config=""))]
+            else:
+                word_boxes = [
+                    (
+                        w["text"],
+                        transformers.normalize_box([w["x0"], w["top"], w["x1"], w["bottom"]], page.width, page.height),
+                    )
+                    for w in words
+                ]
 
-    def as_image(self) -> Tuple[(str, List[int])]:
-        use_pdf2_image()
-        images = pdf2image.convert_from_bytes(self.b)
-
-        word_boxes = []
-        for img in images:
-            words, boxes = apply_tesseract(img, lang=None, tesseract_config="")
-            word_boxes.extend([x for x in zip(words, boxes)])
-
-        # TODO handle this as multiple inputs
-        return {"image": images[0], "word_boxes": word_boxes}
+            img_words.append((images[i], word_boxes))
+        return {"image": img_words}
 
 
 class ImageDocument(Document):
@@ -135,8 +134,12 @@ class ImageDocument(Document):
     def context(self) -> Tuple[(str, List[int])]:
         words, boxes = apply_tesseract(self.b, lang=None, tesseract_config="")
         return {
-            "image": self.b,
-            "word_boxes": [x for x in zip(words, boxes)],
+            "image": [
+                (
+                    self.b,
+                    [x for x in zip(words, boxes)],
+                )
+            ]
         }
 
 

@@ -55,6 +55,8 @@ def main(args):
         for q in args.questions:
             try:
                 response = nlp(question=q, **d.context)
+                if isinstance(response, list):
+                    response = response[0]
             except Exception:
                 log.error(f"Failed while processing {str(p)} on question {q}!")
                 raise
