@@ -1,2 +1,56 @@
+[tool.poetry]
+name = "docqa"
+version = "0.1.0"
+description = "DocQA: An easy way to extract information from documents"
+authors = ["Impira Engineering <engineering@impira.com>"]
+license = "MIT"
+readme = "README.md"
+homepage = ""
+repository ="https://github.com/impira/docqa"
+documentation = ""
+classifiers=[
+        "Programming Language :: Python :: 3",
+        "License :: OSI Approved :: MIT License",
+        "Operating System :: OS Independent",
+    ]
+keywords = [
+  "QA",
+  "Image2QA"
+]
+
+[tool.poetry.dependencies]
+python = "^3.7"
+torch = ">=1.0"
+transformers = {git = "https://github.com/impira/transformers.git", rev = "153d1361c7dcc91c7735cae73e1f594cfcab3e21"}
+pdf2image = "*"
+pdfplumber = "*"
+pillow-simd = "*"
+pydantic = "*"
+pytesseract = "*" 
+requests = "*"
+
+[tool.poetry.dev-dependencies]
+black = "*"
+build = "*"
+flake8 = "*"
+flake8-isort = "*"
+isort = "5.10.1"
+pre-commit = "*"
+twine = "*"
+
+sentencepiece = {version = "*", optional = true }
+protobuf = { version = "<=3.20.1", optional = true }
+
+[tool.poetry.extras]
+donut = ["sentencepiece", "protobuf"]
+cli = []
+
+[build-system]
+requires = ["poetry-core>=1.0.0"]
+build-backend = "poetry.core.masonry.api"
+
+[tool.poetry.urls]
+issues = "https://github.com/impira/docqa/issues"
+
 [tool.black]
 line-length = 119
