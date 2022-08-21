@@ -24,7 +24,7 @@ torch = ">=1.0"
 transformers = {git = "https://github.com/impira/transformers.git", rev = "153d1361c7dcc91c7735cae73e1f594cfcab3e21"}
 pdf2image = "*"
 pdfplumber = "*"
-pillow-simd = "*"
+pillow = "*"
 pydantic = "*"
 pytesseract = "*" 
 requests = "*"
