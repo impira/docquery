@@ -17,7 +17,7 @@ install_requires = [
     "transformers @ git+https://github.com/impira/transformers@153d1361c7dcc91c7735cae73e1f594cfcab3e21",
     "pdf2image",
     "pdfplumber",
-    "pillow-simd",
+    "Pillow",
     "pydantic",
     "pytesseract",  # TODO: Test what happens if the host machine does not have tesseract installed
     "requests",
