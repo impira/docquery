@@ -14,10 +14,10 @@ with open(os.path.join(dir_name, "README.md"), "r", encoding="utf-8") as f:
 
 install_requires = [
     "torch >= 1.0",
-    "git+https://github.com/impira/transformers@153d1361c7dcc91c7735cae73e1f594cfcab3e21",
+    "transformers @ git+https://github.com/impira/transformers@153d1361c7dcc91c7735cae73e1f594cfcab3e21",
     "pdf2image",
     "pdfplumber",
-    "Pillow",
+    "pillow-simd",
     "pydantic",
     "pytesseract",  # TODO: Test what happens if the host machine does not have tesseract installed
     "requests",
@@ -59,7 +59,7 @@ setuptools.setup(
     ],
     package_dir={"": "src"},
     packages=setuptools.find_packages(where="src"),
-    python_requires=">=3.8.0",
+    python_requires=">=3.7.0",
     entry_points={
         "console_scripts": ["docqa = docqa.cmd.__main__:main"],
     },

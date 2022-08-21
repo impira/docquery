@@ -1,6 +1,7 @@
+import abc
 import logging
 import os
-from functools import cached_property
+
 from io import BytesIO
 from typing import List, Tuple
 
@@ -8,6 +9,13 @@ import requests
 from pydantic import validate_arguments
 
 from .ext import transformers
+
+
+try:
+  from functools import cached_property as cached_property
+except ImportError:
+  #for python 3.7 support fall back to just property
+  cached_property = property
 
 
 class UnsupportedDocument(Exception):
@@ -83,11 +91,12 @@ def apply_tesseract(*args, **kwargs):
     return transformers.apply_tesseract(*args, **kwargs)
 
 
-class Document:
+class Document(metaclass=abc.ABCMeta):
     def __init__(self, b):
         self.b = b
 
     @property
+    @abc.abstractmethod
     def context(self) -> Tuple[(str, List[int])]:
         raise NotImplementedError
 
