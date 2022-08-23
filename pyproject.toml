@@ -53,7 +53,7 @@ build-backend = "poetry.core.masonry.api"
 issues = "https://github.com/impira/docqa/issues"
 
 [tool.poetry.scripts]
-docqa = "docqa.cmd:__main__.main"
+docqa = "docqa.cmd.__main__:main"
 
 [tool.black]
 line-length = 119
