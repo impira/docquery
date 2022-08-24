@@ -6,7 +6,7 @@ import setuptools
 dir_name = os.path.abspath(os.path.dirname(__file__))
 
 version_contents = {}
-with open(os.path.join(dir_name, "src", "docqa", "version.py"), encoding="utf-8") as f:
+with open(os.path.join(dir_name, "src", "docquery", "version.py"), encoding="utf-8") as f:
     exec(f.read(), version_contents)
 
 with open(os.path.join(dir_name, "README.md"), "r", encoding="utf-8") as f:
@@ -41,16 +41,16 @@ extras_require = {
 extras_require["all"] = sorted({package for packages in extras_require.values() for package in packages})
 
 setuptools.setup(
-    name="docqa",
+    name="docquery",
     version=version_contents["VERSION"],
     author="Impira Engineering",
     author_email="engineering@impira.com",
-    description="DocQA: An easy way to extract information from documents",
+    description="DocQuery: An easy way to extract information from documents",
     long_description=long_description,
     long_description_content_type="text/markdown",
-    url="https://github.com/impira/docqa",
+    url="https://github.com/impira/docquery",
     project_urls={
-        "Bug Tracker": "https://github.com/impira/docqa/issues",
+        "Bug Tracker": "https://github.com/impira/docquery/issues",
     },
     classifiers=[
         "Programming Language :: Python :: 3",
@@ -61,7 +61,7 @@ setuptools.setup(
     packages=setuptools.find_packages(where="src"),
     python_requires=">=3.7.0",
     entry_points={
-        "console_scripts": ["docqa = docqa.cmd.__main__:main"],
+        "console_scripts": ["docquery = docquery.cmd.__main__:main"],
     },
     install_requires=install_requires,
     extras_require=extras_require,

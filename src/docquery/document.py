@@ -1,7 +1,6 @@
 import abc
 import logging
 import os
-
 from io import BytesIO
 from typing import List, Tuple
 
@@ -12,10 +11,10 @@ from .ext import transformers
 
 
 try:
-  from functools import cached_property as cached_property
+    from functools import cached_property as cached_property
 except ImportError:
-  #for python 3.7 support fall back to just property
-  cached_property = property
+    # for python 3.7 support fall back to just property
+    cached_property = property
 
 
 class UnsupportedDocument(Exception):

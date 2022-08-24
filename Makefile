@@ -1,13 +1,13 @@
 all: build
 
-VERSION=$(shell python  -c 'from src.docqa.version import VERSION; print(VERSION)')
+VERSION=$(shell python  -c 'from src.docquery.version import VERSION; print(VERSION)')
 
 .PHONY: build publish clean
 build:
 	python3 -m build
 
 publish: build
-	python3 -m twine upload dist/docqa-${VERSION}*
+	python3 -m twine upload dist/docquery-${VERSION}*
 
 clean:
 	rm -rf dist/*

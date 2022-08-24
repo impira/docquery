@@ -242,8 +242,8 @@ class DocumentQuestionAnsweringPipeline(ChunkPipeline):
                     words = [x[0] for x in word_boxes]
                     boxes = [x[1] for x in word_boxes]
                 elif "words" in image_features and "boxes" in image_features:
-                    words = image_features.pop("words")
-                    boxes = image_features.pop("boxes")
+                    words = image_features.pop("words")[0]
+                    boxes = image_features.pop("boxes")[0]
                 elif image is not None:
                     if not TESSERACT_LOADED:
                         raise ValueError(

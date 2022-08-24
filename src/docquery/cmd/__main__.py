@@ -24,9 +24,9 @@ if _module_not_found_error is not None:
         textwrap.dedent(
             f"""\
             At least one dependency not found: {str(_module_not_found_error)!r}
-            It is possible that docqa was installed without the CLI dependencies. Run:
+            It is possible that docquery was installed without the CLI dependencies. Run:
 
-              pip install 'docqa[cli]'
+              pip install 'docquery[cli]'
 
             to install impira with the CLI dependencies."""
         )
@@ -44,7 +44,7 @@ def main(args=None):
         "--checkpoint", default=CHECKPOINT, help=f"A custom model checkpoint to use (other than {CHECKPOINT})"
     )
 
-    parser = argparse.ArgumentParser(description="docqa is a cli tool to work with documents.")
+    parser = argparse.ArgumentParser(description="docquery is a cli tool to work with documents.")
     subparsers = parser.add_subparsers(help="sub-command help", dest="subcommand", required=True)
 
     for module in [scan]:

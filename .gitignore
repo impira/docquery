@@ -5,7 +5,7 @@ venv
 .DS_Store
 __pycache__
 dist
-src/docqa.egg-info
+src/docquery.egg-info
 docs
 .vscode/settings.json
 build
