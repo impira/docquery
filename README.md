@@ -64,6 +64,20 @@ DocQuery is intended to have a small install footprint and be simple to work wit
 * Support for images and PDFs. Currently DocQuery supports images and PDFs, with or without embedded text. It does not support word documents, emails, spreadsheets, etc.
 * Scalar text outputs. DocQuery only produces text outputs (answers). It does not support richer scalar types (i.e. it treats numbers and dates as strings) or tables.
 
+## Using Donut
+
+If you'd like to test `docquery` with [Donut](https://arxiv.org/abs/2111.15664), you must install a special version of transformers:
+
+```bash
+$ pip install git+https://github.com/impira/transformers@153d1361c7dcc91c7735cae73e1f594cfcab3e21
+```
+
+since it has not yet been released in a tagged release. You can then run
+
+```bash
+$ docquery scan "What is the effective date?" /path/to/contracts/folder --checkpoint 'naver-clova-ix/donut-base-finetuned-docvqa'
+```
+
 ## Where to go from here
 
 DocQuery is a swiss army knife tool for working with documents and experiencing the power of modern machine learning. You can use it

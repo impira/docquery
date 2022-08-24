@@ -35,7 +35,6 @@ extras_require = {
     "donut": [
         "sentencepiece",
         "protobuf<=3.20.1",
-        "transformers @ git+https://github.com/impira/transformers@153d1361c7dcc91c7735cae73e1f594cfcab3e21",
     ],
     "cli": [],
 }
