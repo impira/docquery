@@ -14,13 +14,13 @@ with open(os.path.join(dir_name, "README.md"), "r", encoding="utf-8") as f:
 
 install_requires = [
     "torch >= 1.0",
-    "transformers @ git+https://github.com/impira/transformers@153d1361c7dcc91c7735cae73e1f594cfcab3e21",
     "pdf2image",
     "pdfplumber",
     "Pillow",
     "pydantic",
     "pytesseract",  # TODO: Test what happens if the host machine does not have tesseract installed
     "requests",
+    "transformers >= 4.21",
 ]
 extras_require = {
     "dev": [
@@ -35,6 +35,7 @@ extras_require = {
     "donut": [
         "sentencepiece",
         "protobuf<=3.20.1",
+        "transformers @ git+https://github.com/impira/transformers@153d1361c7dcc91c7735cae73e1f594cfcab3e21",
     ],
     "cli": [],
 }
