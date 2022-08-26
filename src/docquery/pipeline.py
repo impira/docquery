@@ -1,5 +1,6 @@
 from collections import OrderedDict
 
+import torch
 from transformers import AutoConfig, AutoTokenizer, pipeline
 from transformers.models.auto.auto_factory import _BaseAutoModelClass, _LazyAutoMapping
 from transformers.models.auto.configuration_auto import CONFIG_MAPPING_NAMES
@@ -36,12 +37,15 @@ PIPELINE_REGISTRY.register_pipeline(
 )
 
 
-def get_pipeline(checkpoint=None, revision=None):
+def get_pipeline(checkpoint=None, revision=None, device=None):
     if checkpoint is None:
         checkpoint = CHECKPOINT
 
     if checkpoint == CHECKPOINT and revision is None:
         revision = REVISION
+
+    if device is None:
+        device = "cuda" if torch.cuda.is_available() else "cpu"
 
     kwargs = {}
     if checkpoint == CHECKPOINT:
@@ -71,5 +75,6 @@ def get_pipeline(checkpoint=None, revision=None):
         revision=revision,
         model=model,
         tokenizer=tokenizer,
+        device=device,
         **pipeline_kwargs,
     )

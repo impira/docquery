@@ -99,17 +99,21 @@ class Document(metaclass=abc.ABCMeta):
     def context(self) -> Tuple[(str, List[int])]:
         raise NotImplementedError
 
+    @property
+    @abc.abstractmethod
+    def preview(self) -> "Image":
+        raise NotImplementedError
+
 
 class PDFDocument(Document):
     @cached_property
     def context(self) -> Tuple[(str, List[int])]:
-        # First, try to extract text directly
-        use_pdf_plumber()
-        pdf = pdfplumber.open(BytesIO(self.b))
-        if len(pdf.pages) == 0:
+        pdf = self._pdf
+        if pdf is None:
             return {}
 
-        images = pdf2image.convert_from_bytes(self.b)
+        images = self._images
+
         if len(images) != len(pdf.pages):
             raise ValueError(
                 f"Mismatch: pdfplumber() thinks there are {len(pdf.pages)} pages and"
@@ -136,8 +140,33 @@ class PDFDocument(Document):
             img_words.append((images[i], word_boxes))
         return {"image": img_words}
 
+    @cached_property
+    def preview(self) -> "Image":
+        images = self._images
+        return None if len(images) == 0 else images[0]
+
+    @cached_property
+    def _images(self):
+        # First, try to extract text directly
+        # TODO: This library requires poppler, which is not present everywhere.
+        # We should look into alternatives. We could also gracefully handle this
+        # and simply fall back to _only_ extracted text
+        return pdf2image.convert_from_bytes(self.b)
+
+    @cached_property
+    def _pdf(self):
+        use_pdf_plumber()
+        pdf = pdfplumber.open(BytesIO(self.b))
+        if len(pdf.pages) == 0:
+            return None
+        return pdf
+
 
 class ImageDocument(Document):
+    @cached_property
+    def preview(self) -> "Image":
+        return self.b
+
     @cached_property
     def context(self) -> Tuple[(str, List[int])]:
         words, boxes = apply_tesseract(self.b, lang=None, tesseract_config="")
@@ -157,7 +186,10 @@ def load_document(fpath: str):
         b = requests.get(fpath, stream=True).raw
     else:
         b = open(fpath, "rb")
+    return load_bytes(b, fpath)
 
+
+def load_bytes(b, fpath):
     extension = os.path.basename(fpath).rsplit(".", 1)[-1].split("?")[0].strip()
     if extension in ("pdf"):
         return PDFDocument(b.read())

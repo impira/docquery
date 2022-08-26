@@ -420,7 +420,7 @@ class DocumentQuestionAnsweringPipeline(ChunkPipeline):
                 if word_start is not None and word_end is not None:
                     answers.append(
                         {
-                            "score": score,
+                            "score": float(score),
                             "answer": " ".join(words[word_start : word_end + 1]),
                             "start": word_start,
                             "end": word_end,
