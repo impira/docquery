@@ -45,7 +45,7 @@ def get_pipeline(checkpoint=None, revision=None, device=None):
         revision = REVISION
 
     if device is None:
-        device = "cuda" if torch.cuda.is_available() else "cpu"
+        device = 0 if torch.cuda.is_available() else -1
 
     kwargs = {}
     if checkpoint == CHECKPOINT:
