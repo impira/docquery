@@ -287,6 +287,7 @@ class DocumentQuestionAnsweringPipeline(ChunkPipeline):
                     "p_mask": None,
                     "word_ids": None,
                     "words": None,
+                    "page": None,
                     "output_attentions": True,
                 }
             else:
@@ -347,12 +348,14 @@ class DocumentQuestionAnsweringPipeline(ChunkPipeline):
                         "p_mask": p_mask[span_idx],
                         "word_ids": encoding.word_ids(span_idx),
                         "words": words,
+                        "page": page_idx,
                     }
 
     def _forward(self, model_inputs):
         p_mask = model_inputs.pop("p_mask", None)
         word_ids = model_inputs.pop("word_ids", None)
         words = model_inputs.pop("words", None)
+        page = model_inputs.pop("page", None)
 
         if "overflow_to_sample_mapping" in model_inputs:
             model_inputs.pop("overflow_to_sample_mapping")
@@ -365,6 +368,7 @@ class DocumentQuestionAnsweringPipeline(ChunkPipeline):
         model_outputs["p_mask"] = p_mask
         model_outputs["word_ids"] = word_ids
         model_outputs["words"] = words
+        model_outputs["page"] = page
         model_outputs["attention_mask"] = model_inputs.get("attention_mask", None)
         return model_outputs
 
@@ -400,6 +404,7 @@ class DocumentQuestionAnsweringPipeline(ChunkPipeline):
         min_null_score = 1000000  # large and positive
         answers = []
 
+        word_start = 0
         for output in model_outputs:
             words = output["words"]
 
@@ -424,6 +429,7 @@ class DocumentQuestionAnsweringPipeline(ChunkPipeline):
                             "answer": " ".join(words[word_start : word_end + 1]),
                             "start": word_start,
                             "end": word_end,
+                            "page": output["page"],
                         }
                     )
 
