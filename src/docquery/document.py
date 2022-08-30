@@ -150,7 +150,7 @@ class PDFDocument(Document):
         # TODO: This library requires poppler, which is not present everywhere.
         # We should look into alternatives. We could also gracefully handle this
         # and simply fall back to _only_ extracted text
-        return pdf2image.convert_from_bytes(self.b)
+        return [x.convert("RGB") for x in pdf2image.convert_from_bytes(self.b)]
 
     @cached_property
     def _pdf(self):
@@ -164,7 +164,7 @@ class PDFDocument(Document):
 class ImageDocument(Document):
     @cached_property
     def preview(self) -> "Image":
-        return [self.b]
+        return [self.b.convert("RGB")]
 
     @cached_property
     def context(self) -> Tuple[(str, List[int])]:
