@@ -142,8 +142,7 @@ class PDFDocument(Document):
 
     @cached_property
     def preview(self) -> "Image":
-        images = self._images
-        return None if len(images) == 0 else images[0]
+        return self._images
 
     @cached_property
     def _images(self):
@@ -165,7 +164,7 @@ class PDFDocument(Document):
 class ImageDocument(Document):
     @cached_property
     def preview(self) -> "Image":
-        return self.b
+        return [self.b]
 
     @cached_property
     def context(self) -> Tuple[(str, List[int])]:
