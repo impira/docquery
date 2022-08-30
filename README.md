@@ -1,4 +1,13 @@
-# DocQuery: Query Documents Using NLP
+<div align="center">
+
+# DocQuery: Document Query Engine Powered by NLP
+
+[![Demo](https://img.shields.io/badge/Demo-Gradio-brightgreen)](https://huggingface.co/spaces/impira/docquery)
+[![Demo](https://img.shields.io/badge/Demo-Colab-orange)](https://github.com/impira/docquery/blob/main/docquery_example.ipynb)
+[![PyPI](https://img.shields.io/pypi/v/docquery?color=green&label=pip%20install%20docquery)](https://pepy.tech/project/docquery)
+[![Downloads](https://static.pepy.tech/personalized-badge/docquery?period=total&units=international_system&left_color=grey&right_color=green&left_text=Downloads)](https://pepy.tech/project/docquery)
+
+</div>
 
 DocQuery is a library and command-line tool that makes it easy to analyze semi-structured and unstructed documents (PDFs, scanned
 images, etc.) using advanced natural language processing (NLP). You simply point DocQuery at one or more documents and specify a
