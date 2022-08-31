@@ -18,7 +18,7 @@ question you want to ask. DocQuery is created by the team at [Impira](https://ww
 To install `docquery`, you can simply run `pip install docquery`. This will install the command line tool as well as the library.
 If you want to run OCR on images, then you must also install the [tesseract](https://github.com/tesseract-ocr/tesseract) library:
 
-* Mac OS X: `brew install tesseract`
+* Mac OS X (using [Homebrew](https://brew.sh/)]: `brew install tesseract`
 * Ubuntu: `apt install tesseract-ocr`
 
 `docquery` scan allows you to ask one or more questions to a single document or directory of files. For example, you can
