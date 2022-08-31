@@ -105,6 +105,14 @@ and can achieve 95%+ accuracy out-of-the-box for most use cases. It also has an 
 and improve the models, as well as an API that makes integration a breeze. Please [sign up for the product](https://www.impira.com/signup) or
 [reach out to us](info@impira.com) for more details.
 
+## Status
+
+DocQuery is a new project. Although the underyling models are running in production, we've just recently released our code in open source
+and are actively working with the OSS community to upstream some of the changes we've made (e.g. [the model](https://github.com/huggingface/transformers/pull/18407)
+and [pipeline](https://github.com/huggingface/transformers/pull/18414)). DocQuery is rapidly changing, and we are likely to make breaking
+API changes. If you would like to run it in production, then we suggest pinning a version or commit hash. Either way, please get in touch
+with us at [oss@impira.com](mailto:oss@impira.com) with any questions or feedback.
+
 ## Acknowledgements
 
 DocQuery would not be possible without the contributions of many open source projects:
