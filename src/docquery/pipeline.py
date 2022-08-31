@@ -12,7 +12,7 @@ from .ext.pipeline import DocumentQuestionAnsweringPipeline
 
 
 CHECKPOINT = "impira/layoutlm-document-qa"
-REVISION = "1244b679e00fc18514c352aa44c171d4311fe7e4"
+REVISION = "3a93017fc2d200d68d0c2cc0fa62eb8d50314605"
 
 MODEL_FOR_DOCUMENT_QUESTION_ANSWERING_MAPPING_NAMES = OrderedDict(
     [
