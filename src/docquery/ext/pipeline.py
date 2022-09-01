@@ -378,7 +378,7 @@ class DocumentQuestionAnsweringPipeline(ChunkPipeline):
         else:
             answers = self.postprocess_extractive_qa(model_outputs, top_k=top_k, **kwargs)
 
-        answers = sorted(answers, key=lambda x: x["score"], reverse=True)[:top_k]
+        answers = sorted(answers, key=lambda x: x.get("score", 0), reverse=True)[:top_k]
         if len(answers) == 1:
             return answers[0]
         return answers

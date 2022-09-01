@@ -182,7 +182,10 @@ class ImageDocument(Document):
 @validate_arguments
 def load_document(fpath: str):
     if fpath.startswith("http://") or fpath.startswith("https://"):
-        b = requests.get(fpath, stream=True).raw
+        resp = requests.get(fpath, stream=True)
+        if not resp.ok:
+            raise UnsupportedDocument(f"Failed to download: {resp.content}")
+        b = resp.raw
     else:
         b = open(fpath, "rb")
     return load_bytes(b, fpath)
