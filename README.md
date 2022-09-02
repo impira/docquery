@@ -9,7 +9,7 @@
 
 </div>
 
-DocQuery is a library and command-line tool that makes it easy to analyze semi-structured and unstructed documents (PDFs, scanned
+DocQuery is a library and command-line tool that makes it easy to analyze semi-structured and unstructured documents (PDFs, scanned
 images, etc.) using advanced natural language processing (NLP). You simply point DocQuery at one or more documents and specify a
 question you want to ask. DocQuery is created by the team at [Impira](https://www.impira.com/).
 
