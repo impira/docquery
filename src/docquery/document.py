@@ -2,7 +2,7 @@ import abc
 import logging
 import os
 from io import BytesIO
-from typing import List, Tuple, Any, Union
+from typing import List, Tuple
 
 import requests
 from pydantic import validate_arguments
@@ -130,8 +130,7 @@ class Document(metaclass=abc.ABCMeta):
 
 class PDFDocument(Document):
     @cached_property
-    def context(self) -> Union[
-        dict[Any, Any], dict[str, list[tuple[Any, Union[list[tuple[Any]], list[tuple[Any, Any]]]]]]]:
+    def context(self) -> Tuple[(str, List[int])]:
         pdf = self._pdf
         if pdf is None:
             return {}
@@ -197,17 +196,8 @@ class ImageDocument(Document):
         return [self.b.convert("RGB")]
 
     @cached_property
-    def context(self) -> dict[str, list[tuple[Any, list[tuple[Any, Any]]]]]:
-
-        try:
-            use_tesseract()
-            if TESSERACT_AVAILABLE:
-                words, boxes = apply_tesseract(self.b, lang=None, tesseract_config="")
-        except UnsupportedDocument:
-            use_easyocr()
-            if EASYOCR_AVAILABLE:
-                words, boxes = apply_easyocr(self.b, lang=None, tesseract_config="")
-
+    def context(self) -> Tuple[(str, List[int])]:
+        words, boxes = apply_tesseract(self.b, lang=None, tesseract_config="")
         return {
             "image": [
                 (
