@@ -29,7 +29,6 @@ TESSERACT_AVAILABLE = False
 EASYOCR_AVAILABLE = False
 PDF_2_IMAGE = False
 PDF_PLUMBER = False
-EASYOCR_READER = None
 
 try:
     from PIL import Image, UnidentifiedImageError
@@ -51,8 +50,8 @@ except pytesseract.TesseractNotFoundError as e:
 
 try:
     import easyocr
-
     EASYOCR_AVAILABLE = True
+    EASYOCR_READER = None
 except ImportError:
     pass
 
@@ -70,7 +69,6 @@ try:
 except ImportError:
     pass
 
-EASYOCR_READER = None
 
 def use_pil():
     if not PIL_AVAILABLE:
@@ -107,6 +105,7 @@ def apply_tesseract(*args, **kwargs):
 
 
 def apply_easyocr(*args, **kwargs):
+    global EASYOCR_READER
     use_easyocr()
     if not EASYOCR_READER:
         EASYOCR_READER = easyocr.Reader(['en'])  # this needs to run only once to load the model into memory
