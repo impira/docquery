@@ -20,6 +20,7 @@
 # Copied and adapted from transformers (https://github.com/huggingface/transformers)
 
 try:
+    import easyocr
     import pytesseract
     from PIL import Image
 except ImportError as e:
@@ -69,6 +70,21 @@ def apply_tesseract(image: "Image.Image", lang: Optional[str], tesseract_config:
     normalized_boxes = []
     for box in actual_boxes:
         normalized_boxes.append(normalize_box(box, image_width, image_height))
+
+    assert len(words) == len(normalized_boxes), "Not as many words as there are bounding boxes"
+
+    return words, normalized_boxes
+
+
+def apply_easyocr(image: "Image.Image", reader):
+    """Applies Tesseract OCR on a document image, and returns recognized words + normalized bounding boxes."""
+    # apply OCR
+    data = reader.readtext(image)
+    actual_boxes, words, acc = list(map(list, zip(*data)))
+    image_width, image_height = image.size
+
+    # finally, normalize the bounding boxes
+    normalized_boxes = [normalize_box(box, image_width, image_height) for box in actual_boxes]
 
     assert len(words) == len(normalized_boxes), "Not as many words as there are bounding boxes"
 
