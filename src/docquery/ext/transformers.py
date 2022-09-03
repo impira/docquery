@@ -28,6 +28,8 @@ except ImportError as e:
 
 from typing import Optional
 
+import numpy as np
+
 
 # normalize_bbox() and apply_tesseract() are derived from apply_tesseract in models/layoutlmv3/feature_extraction_layoutlmv3.py.
 # However, because the pipeline may evolve from what layoutlmv3 currently does, it's copied (vs. imported) to avoid creating an
@@ -79,7 +81,7 @@ def apply_tesseract(image: "Image.Image", lang: Optional[str], tesseract_config:
 def apply_easyocr(image: "Image.Image", reader):
     """Applies Tesseract OCR on a document image, and returns recognized words + normalized bounding boxes."""
     # apply OCR
-    data = reader.readtext(image)
+    data = reader.readtext(np.array(image))
     actual_boxes, words, acc = list(map(list, zip(*data)))
     image_width, image_height = image.size
 
