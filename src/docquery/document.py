@@ -52,7 +52,7 @@ except pytesseract.TesseractNotFoundError as e:
 try:
     import easyocr
 
-    EASY_OCR = True
+    EASYOCR_AVAILABLE = True
 except ImportError:
     pass
 
