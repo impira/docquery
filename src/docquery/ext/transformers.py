@@ -78,6 +78,11 @@ def apply_tesseract(image: "Image.Image", lang: Optional[str], tesseract_config:
     return words, normalized_boxes
 
 
+def convert_format(open_ocr_box):
+    tl, tr, br, bl = open_ocr_box
+    return bl + tr
+
+
 def apply_easyocr(image: "Image.Image", reader):
     """Applies Tesseract OCR on a document image, and returns recognized words + normalized bounding boxes."""
     # apply OCR
@@ -85,8 +90,9 @@ def apply_easyocr(image: "Image.Image", reader):
     actual_boxes, words, acc = list(map(list, zip(*data)))
     image_width, image_height = image.size
 
+
     # finally, normalize the bounding boxes
-    normalized_boxes = [normalize_box(box, image_width, image_height) for box in actual_boxes]
+    normalized_boxes = [normalize_box(convert_format(box), image_width, image_height) for box in actual_boxes]
 
     assert len(words) == len(normalized_boxes), "Not as many words as there are bounding boxes"
 
