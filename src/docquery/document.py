@@ -6,7 +6,7 @@ from typing import List, Tuple, Optional
 import requests
 from pydantic import validate_arguments
 
-from ocr_processor import TesseractProcessor, TESSERACT_AVAILABLE, EasyOCRProcessor, EASYOCR_AVAILABLE, DummyProcessor
+from .ocr_processor import TesseractProcessor, TESSERACT_AVAILABLE, EasyOCRProcessor, EASYOCR_AVAILABLE, DummyProcessor
 
 try:
     from functools import cached_property as cached_property
@@ -156,7 +156,7 @@ class ImageDocument(Document):
 
 
 @validate_arguments
-def load_document(fpath: str, ocr_processor_name=Optional[str]):
+def load_document(fpath: str, ocr_processor_name: Optional[str]):
     if fpath.startswith("http://") or fpath.startswith("https://"):
         resp = requests.get(fpath, stream=True)
         if not resp.ok:
@@ -164,10 +164,10 @@ def load_document(fpath: str, ocr_processor_name=Optional[str]):
         b = resp.raw
     else:
         b = open(fpath, "rb")
-    return load_bytes(b, fpath, ocr_processor_name)
+    return load_bytes(b, fpath, ocr_processor_name=ocr_processor_name)
 
 
-def load_bytes(b, fpath, ocr_processor_name=Optional[str]):
+def load_bytes(b, fpath, ocr_processor_name: Optional[str]):
     ocr_processor = get_ocr_processor(ocr_processor_name)
     extension = os.path.basename(fpath).rsplit(".", 1)[-1].split("?")[0].strip()
     if extension in ("pdf"):
@@ -181,17 +181,31 @@ def load_bytes(b, fpath, ocr_processor_name=Optional[str]):
         return ImageDocument(img, ocr_processor=ocr_processor)
 
 
+tesseract_processor = None
+easy_ocr_processor = None
+
+
 def get_ocr_processor(ocr_processor_name: Optional[str]):
+    global tesseract_processor
+    global easy_ocr_processor
     if not ocr_processor_name:
         if TESSERACT_AVAILABLE:
-            return TesseractProcessor()
+            if not tesseract_processor:
+                tesseract_processor = TesseractProcessor()
+            return tesseract_processor
         elif EASYOCR_AVAILABLE:
-            return EasyOCRProcessor()
+            if not easy_ocr_processor:
+                easy_ocr_processor = EasyOCRProcessor()
+            return easy_ocr_processor
         else:
             DummyProcessor()
     elif ocr_processor_name.lower() == "easyocr" and EASYOCR_AVAILABLE:
-        return EasyOCRProcessor()
+        if not easy_ocr_processor:
+            easy_ocr_processor = EasyOCRProcessor()
+        return easy_ocr_processor
     elif ocr_processor_name.lower() == "tesseract" and TESSERACT_AVAILABLE:
-        return TesseractProcessor()
+        if not tesseract_processor:
+            tesseract_processor = TesseractProcessor()
+        return tesseract_processor
     else:
         DummyProcessor()
