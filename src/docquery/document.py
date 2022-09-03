@@ -2,13 +2,12 @@ import abc
 import logging
 import os
 from io import BytesIO
-from typing import List, Tuple
+from typing import List, Tuple, Any, Union
 
 import requests
 from pydantic import validate_arguments
 
 from .ext import transformers
-
 
 try:
     from functools import cached_property as cached_property
@@ -27,8 +26,10 @@ class UnsupportedDocument(Exception):
 
 PIL_AVAILABLE = False
 TESSERACT_AVAILABLE = False
+EASYOCR_AVAILABLE = False
 PDF_2_IMAGE = False
 PDF_PLUMBER = False
+
 
 try:
     from PIL import Image, UnidentifiedImageError
@@ -49,6 +50,13 @@ except pytesseract.TesseractNotFoundError as e:
     pass
 
 try:
+    import easyocr
+
+    EASY_OCR = True
+except ImportError:
+    pass
+
+try:
     import pdf2image
 
     PDF_2_IMAGE = True
@@ -62,6 +70,7 @@ try:
 except ImportError:
     pass
 
+EASYOCR_READER = None
 
 def use_pil():
     if not PIL_AVAILABLE:
@@ -72,6 +81,13 @@ def use_tesseract():
     if not TESSERACT_AVAILABLE:
         raise UnsupportedDocument(
             "Unable to use pytesseract (OCR will be unavailable). Install tesseract to process images with OCR."
+        )
+
+
+def use_easyocr():
+    if not EASYOCR_AVAILABLE:
+        raise UnsupportedDocument(
+            "Unable to use easyocr (OCR will be unavailable). Install easyocr to process images with OCR."
         )
 
 
@@ -88,6 +104,13 @@ def use_pdf_plumber():
 def apply_tesseract(*args, **kwargs):
     use_tesseract()
     return transformers.apply_tesseract(*args, **kwargs)
+
+
+def apply_easyocr(*args, **kwargs):
+    use_easyocr()
+    if not EASYOCR_READER:
+        EASYOCR_READER = easyocr.Reader(['en'])  # this needs to run only once to load the model into memory
+    return transformers.apply_easyocr(*args, reader=EASYOCR_READER)
 
 
 class Document(metaclass=abc.ABCMeta):
@@ -107,7 +130,8 @@ class Document(metaclass=abc.ABCMeta):
 
 class PDFDocument(Document):
     @cached_property
-    def context(self) -> Tuple[(str, List[int])]:
+    def context(self) -> Union[
+        dict[Any, Any], dict[str, list[tuple[Any, Union[list[tuple[Any]], list[tuple[Any, Any]]]]]]]:
         pdf = self._pdf
         if pdf is None:
             return {}
@@ -125,9 +149,15 @@ class PDFDocument(Document):
             words = page.extract_words()
 
             if len(words) == 0:
-                use_tesseract()
-                if TESSERACT_AVAILABLE:
-                    word_boxes = [x for x in zip(*apply_tesseract(images[i], lang=None, tesseract_config=""))]
+                try:
+                    use_tesseract()
+                    if TESSERACT_AVAILABLE:
+                        word_boxes = [x for x in zip(*apply_tesseract(images[i], lang=None, tesseract_config=""))]
+                except UnsupportedDocument:
+                    use_easyocr()
+                    if EASYOCR_AVAILABLE:
+                        word_boxes = [x for x in zip(*apply_easyocr(images[i]))]
+
             else:
                 word_boxes = [
                     (
@@ -167,8 +197,17 @@ class ImageDocument(Document):
         return [self.b.convert("RGB")]
 
     @cached_property
-    def context(self) -> Tuple[(str, List[int])]:
-        words, boxes = apply_tesseract(self.b, lang=None, tesseract_config="")
+    def context(self) -> dict[str, list[tuple[Any, list[tuple[Any, Any]]]]]:
+
+        try:
+            use_tesseract()
+            if TESSERACT_AVAILABLE:
+                words, boxes = apply_tesseract(self.b, lang=None, tesseract_config="")
+        except UnsupportedDocument:
+            use_easyocr()
+            if EASYOCR_AVAILABLE:
+                words, boxes = apply_easyocr(self.b, lang=None, tesseract_config="")
+
         return {
             "image": [
                 (
