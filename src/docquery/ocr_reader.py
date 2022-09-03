@@ -10,7 +10,7 @@ class NoOCRReaderFound(Exception):
         self.e = e
 
     def __str__(self):
-        return f"Could not load OCR Processor: {self.e}"
+        return f"Could not load OCR Reader: {self.e}"
 
 
 TESSERACT_AVAILABLE = False
@@ -35,13 +35,13 @@ except ImportError:
     pass
 
 
-class OCRProcessor(metaclass=abc.ABCMeta):
+class OCRReader(metaclass=abc.ABCMeta):
     def __init__(self):
         # TODO: add device here
         self.check_if_available()
 
     @abc.abstractmethod
-    def apply_ocr(self, image: "Image.Image") -> Tuple[(List[Any], List[List[int]])]:
+    def apply_ocr(self, image: "Image.Image") -> Tuple[List[Any], List[List[int]]]:
         raise NotImplementedError
 
     @staticmethod
@@ -49,24 +49,12 @@ class OCRProcessor(metaclass=abc.ABCMeta):
     def check_if_available():
         raise NotImplementedError
 
-    @staticmethod
-    def normalize_box(box, width, height):
-        return [
-            max(min(c, 1000), 0)
-            for c in [
-                int(1000 * (box[0] / width)),
-                int(1000 * (box[1] / height)),
-                int(1000 * (box[2] / width)),
-                int(1000 * (box[3] / height)),
-            ]
-        ]
 
-
-class TesseractProcessor(OCRProcessor):
+class TesseractReader(OCRReader):
     def __init__(self):
         super().__init__()
 
-    def apply_ocr(self, image: "Image.Image") -> Tuple[(List[Any], List[List[int]])]:
+    def apply_ocr(self, image: "Image.Image") -> Tuple[List[Any], List[List[int]]]:
         """
         Applies Tesseract on a document image, and returns recognized words + normalized bounding boxes.
         This was derived from LayoutLM preprocessing code in Huggingface's Transformers library.
@@ -85,14 +73,7 @@ class TesseractProcessor(OCRProcessor):
         # turn coordinates into (left, top, left+width, top+height) format
         actual_boxes = [[x, y, x + w, y + h] for x, y, w, h in zip(left, top, width, height)]
 
-        image_width, image_height = image.size
-
-        # finally, normalize the bounding boxes
-        normalized_boxes = [self.normalize_box(box, image_width, image_height) for box in actual_boxes]
-
-        assert len(words) == len(normalized_boxes), "Not as many words as there are bounding boxes"
-
-        return words, normalized_boxes
+        return words, actual_boxes
 
     @staticmethod
     def check_if_available():
@@ -102,12 +83,12 @@ class TesseractProcessor(OCRProcessor):
             )
 
 
-class EasyOCRProcessor(OCRProcessor):
+class EasyOCRReader(OCRReader):
     def __init__(self):
         super().__init__()
         self.reader = None
 
-    def apply_ocr(self, image: "Image.Image") -> Tuple[(List[Any], List[List[int]])]:
+    def apply_ocr(self, image: "Image.Image") -> Tuple[List[Any], List[List[int]]]:
         """Applies Easy OCR on a document image, and returns recognized words + normalized bounding boxes."""
         if not self.reader:
             # TODO: expose language currently setting to english
@@ -125,14 +106,7 @@ class EasyOCRProcessor(OCRProcessor):
         # turn coordinates into (left, top, left+width, top+height) format
         actual_boxes = [tl + br for tl, tr, br, bl in boxes]
 
-        image_width, image_height = image.size
-
-        # finally, normalize the bounding boxes
-        normalized_boxes = [self.normalize_box(box, image_width, image_height) for box in actual_boxes]
-
-        assert len(words) == len(normalized_boxes), "Not as many words as there are bounding boxes"
-
-        return words, normalized_boxes
+        return words, actual_boxes
 
     @staticmethod
     def check_if_available():
@@ -142,7 +116,7 @@ class EasyOCRProcessor(OCRProcessor):
             )
 
 
-class DummyProcessor(OCRProcessor):
+class DummyOCRReader(OCRReader):
     def __init__(self):
         super().__init__()
         self.reader = None
@@ -152,4 +126,4 @@ class DummyProcessor(OCRProcessor):
 
     @staticmethod
     def _check_if_available():
-        logging.warning("Falling back to a dummy OCR processor since none were found.")
+        logging.warning("Falling back to a dummy OCR reader since none were found.")
