@@ -197,7 +197,14 @@ class ImageDocument(Document):
 
     @cached_property
     def context(self) -> Tuple[(str, List[int])]:
-        words, boxes = apply_tesseract(self.b, lang=None, tesseract_config="")
+        try:
+            use_tesseract()
+            if TESSERACT_AVAILABLE:
+                words, boxes = apply_tesseract(self.b, lang=None, tesseract_config="")
+        except UnsupportedDocument:
+            use_easyocr()
+            if EASYOCR_AVAILABLE:
+                words, boxes = apply_easyocr(self.b)
         return {
             "image": [
                 (
