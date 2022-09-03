@@ -156,7 +156,7 @@ class ImageDocument(Document):
 
 
 @validate_arguments
-def load_document(fpath: str, ocr_processor_name: Optional[str]):
+def load_document(fpath: str, ocr_processor_name=None):
     if fpath.startswith("http://") or fpath.startswith("https://"):
         resp = requests.get(fpath, stream=True)
         if not resp.ok:
