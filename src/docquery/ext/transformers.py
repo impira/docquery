@@ -61,38 +61,37 @@ def apply_tesseract(image: "Image.Image", lang: Optional[str], tesseract_config:
     height = [coord for idx, coord in enumerate(height) if idx not in irrelevant_indices]
 
     # turn coordinates into (left, top, left+width, top+height) format
-    actual_boxes = []
-    for x, y, w, h in zip(left, top, width, height):
-        actual_box = [x, y, x + w, y + h]
-        actual_boxes.append(actual_box)
+    actual_boxes = [[x, y, x + w, y + h] for x, y, w, h in zip(left, top, width, height)]
 
     image_width, image_height = image.size
 
     # finally, normalize the bounding boxes
-    normalized_boxes = []
-    for box in actual_boxes:
-        normalized_boxes.append(normalize_box(box, image_width, image_height))
+    normalized_boxes = [normalize_box(box, image_width, image_height) for box in actual_boxes]
 
     assert len(words) == len(normalized_boxes), "Not as many words as there are bounding boxes"
 
     return words, normalized_boxes
 
 
-def convert_format(open_ocr_box):
-    tl, tr, br, bl = open_ocr_box
-    return bl + tr
-
 
 def apply_easyocr(image: "Image.Image", reader):
     """Applies Tesseract OCR on a document image, and returns recognized words + normalized bounding boxes."""
     # apply OCR
     data = reader.readtext(np.array(image))
-    actual_boxes, words, acc = list(map(list, zip(*data)))
+    boxes, words, acc = list(map(list, zip(*data)))
+
+    # filter empty words and corresponding coordinates
+    irrelevant_indices = [idx for idx, word in enumerate(words) if not word.strip()]
+    words = [word for idx, word in enumerate(words) if idx not in irrelevant_indices]
+    boxes = [coords for idx, coords in enumerate(boxes) if idx not in irrelevant_indices]
+
+    # turn coordinates into (left, top, left+width, top+height) format
+    actual_boxes = [tl + br for tl, tr, br, bl in boxes]
+
     image_width, image_height = image.size
 
-
     # finally, normalize the bounding boxes
-    normalized_boxes = [normalize_box(convert_format(box), image_width, image_height) for box in actual_boxes]
+    normalized_boxes = [normalize_box(box, image_width, image_height) for box in actual_boxes]
 
     assert len(words) == len(normalized_boxes), "Not as many words as there are bounding boxes"
 
