@@ -104,7 +104,7 @@ class Document(metaclass=abc.ABCMeta):
 
 class PDFDocument(Document):
     @cached_property
-    def context(self) -> Dict[str, list[tuple["Image", List[Any]]]]:
+    def context(self) -> Dict[str, List[tuple["Image", List[Any]]]]:
         pdf = self._pdf
         if pdf is None:
             return {}
@@ -165,7 +165,7 @@ class ImageDocument(Document):
         return [self.b.convert("RGB")]
 
     @cached_property
-    def context(self) -> Dict[str, list[tuple["Image", List[Any]]]]:
+    def context(self) -> Dict[str, List[tuple["Image", List[Any]]]]:
         words, boxes = self._normalize_boxes(self.b,
                                              *self.ocr_reader.apply_ocr(self.b))
 
