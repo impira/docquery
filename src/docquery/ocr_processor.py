@@ -1,6 +1,6 @@
 import abc
 import logging
-from typing import List, Optional, Tuple, Any
+from typing import List, Tuple, Any
 
 import numpy as np
 
@@ -36,8 +36,8 @@ except ImportError:
 
 
 class OCRProcessor(metaclass=abc.ABCMeta):
-    def __init__(self, device: Optional[int]):
-        self.device = device
+    def __init__(self):
+        # TODO: add device here
         self.check_if_available()
 
     @abc.abstractmethod
@@ -66,7 +66,7 @@ class TesseractProcessor(OCRProcessor):
     def __init__(self):
         super().__init__()
 
-    def apply_ocr(self, image: "Image.Image") -> tuple[list[Any], list[list[int]]]:
+    def apply_ocr(self, image: "Image.Image") -> Tuple[(List[Any], List[List[int]])]:
         """Applies Tesseract on a document image, and returns recognized words + normalized bounding boxes."""
         data = pytesseract.image_to_data(image, output_type="dict")
         words, left, top, width, height = data["text"], data["left"], data["top"], data["width"], data["height"]
@@ -104,11 +104,11 @@ class EasyOCRProcessor(OCRProcessor):
         super().__init__()
         self.reader = None
 
-    def apply_ocr(self, image: "Image.Image") -> tuple[list[Any], list[list[int]]]:
+    def apply_ocr(self, image: "Image.Image") -> Tuple[(List[Any], List[List[int]])]:
         """Applies Easy OCR on a document image, and returns recognized words + normalized bounding boxes."""
         if not self.reader:
             # TODO: expose language currently setting to english
-            self.reader = easyocr.Reader(['en'], gpu=self.device > -1)
+            self.reader = easyocr.Reader(['en'])  # TODO: device here ) gpu=self.device > -1)
 
         # apply OCR
         data = self.reader.readtext(np.array(image))
@@ -144,7 +144,7 @@ class DummyProcessor(OCRProcessor):
         super().__init__()
         self.reader = None
 
-    def apply_ocr(self, image: "Image.Image") -> tuple[list[Any], list[list[int]]]:
+    def apply_ocr(self, image: "Image.Image") -> Tuple[(List[Any], List[List[int]])]:
         raise NoOCRReaderFound("Unable to find any OCR engine and OCR extraction was requested")
 
     @staticmethod
