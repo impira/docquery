@@ -29,7 +29,7 @@ TESSERACT_AVAILABLE = False
 EASYOCR_AVAILABLE = False
 PDF_2_IMAGE = False
 PDF_PLUMBER = False
-
+EASYOCR_READER = None
 
 try:
     from PIL import Image, UnidentifiedImageError
