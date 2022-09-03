@@ -208,4 +208,4 @@ def get_ocr_processor(ocr_processor_name: Optional[str]):
             tesseract_processor = TesseractProcessor()
         return tesseract_processor
     else:
-        DummyProcessor()
+        return DummyProcessor()
