@@ -67,13 +67,16 @@ class TesseractProcessor(OCRProcessor):
         super().__init__()
 
     def apply_ocr(self, image: "Image.Image") -> Tuple[(List[Any], List[List[int]])]:
-        """Applies Tesseract on a document image, and returns recognized words + normalized bounding boxes."""
+        """
+        Applies Tesseract on a document image, and returns recognized words + normalized bounding boxes.
+        This was derived from LayoutLM preprocessing code in Huggingface's Transformers library.
+        """
         data = pytesseract.image_to_data(image, output_type="dict")
         words, left, top, width, height = data["text"], data["left"], data["top"], data["width"], data["height"]
 
         # filter empty words and corresponding coordinates
-        irrelevant_indices = [idx for idx, word in enumerate(words) if not word.strip()]
-        words = [word for idx, word in enumerate(words) if idx not in irrelevant_indices]
+        irrelevant_indices = set(idx for idx, word in enumerate(words) if not word.strip())
+        words = [word.strip() for idx, word in enumerate(words) if idx not in irrelevant_indices]
         left = [coord for idx, coord in enumerate(left) if idx not in irrelevant_indices]
         top = [coord for idx, coord in enumerate(top) if idx not in irrelevant_indices]
         width = [coord for idx, coord in enumerate(width) if idx not in irrelevant_indices]
@@ -108,7 +111,7 @@ class EasyOCRProcessor(OCRProcessor):
         """Applies Easy OCR on a document image, and returns recognized words + normalized bounding boxes."""
         if not self.reader:
             # TODO: expose language currently setting to english
-            self.reader = easyocr.Reader(['en'])  # TODO: device here ) gpu=self.device > -1)
+            self.reader = easyocr.Reader(['en'])  # TODO: device here example: gpu=self.device > -1)
 
         # apply OCR
         data = self.reader.readtext(np.array(image))
@@ -116,7 +119,7 @@ class EasyOCRProcessor(OCRProcessor):
 
         # filter empty words and corresponding coordinates
         irrelevant_indices = set(idx for idx, word in enumerate(words) if not word.strip())
-        words = [word for idx, word in enumerate(words) if idx not in irrelevant_indices]
+        words = [word.strip() for idx, word in enumerate(words) if idx not in irrelevant_indices]
         boxes = [coords for idx, coords in enumerate(boxes) if idx not in irrelevant_indices]
 
         # turn coordinates into (left, top, left+width, top+height) format
@@ -148,5 +151,5 @@ class DummyProcessor(OCRProcessor):
         raise NoOCRReaderFound("Unable to find any OCR engine and OCR extraction was requested")
 
     @staticmethod
-    def check_if_available():
-        logging.warning("Unable to find OCR processor might not be needed")
+    def _check_if_available():
+        logging.warning("Falling back to a dummy OCR processor since none were found.")
