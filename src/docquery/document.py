@@ -1,13 +1,12 @@
 import abc
-import logging
 import os
 from io import BytesIO
-from typing import List, Tuple
+from typing import List, Tuple, Optional
 
 import requests
 from pydantic import validate_arguments
 
-from .ext import transformers
+from ocr_processor import TesseractProcessor, TESSERACT_AVAILABLE, EasyOCRProcessor, EASYOCR_AVAILABLE, DummyProcessor
 
 try:
     from functools import cached_property as cached_property
@@ -25,8 +24,6 @@ class UnsupportedDocument(Exception):
 
 
 PIL_AVAILABLE = False
-TESSERACT_AVAILABLE = False
-EASYOCR_AVAILABLE = False
 PDF_2_IMAGE = False
 PDF_PLUMBER = False
 
@@ -34,24 +31,6 @@ try:
     from PIL import Image, UnidentifiedImageError
 
     PIL_AVAILABLE = True
-except ImportError:
-    pass
-
-try:
-    import pytesseract  # noqa
-
-    pytesseract.get_tesseract_version()
-    TESSERACT_AVAILABLE = True
-except ImportError:
-    pass
-except pytesseract.TesseractNotFoundError as e:
-    logging.warning("Unable to find tesseract: %s." % (e))
-    pass
-
-try:
-    import easyocr
-    EASYOCR_AVAILABLE = True
-    EASYOCR_READER = None
 except ImportError:
     pass
 
@@ -75,20 +54,6 @@ def use_pil():
         raise UnsupportedDocument("Unable to import PIL (images will be unavailable)")
 
 
-def use_tesseract():
-    if not TESSERACT_AVAILABLE:
-        raise UnsupportedDocument(
-            "Unable to use pytesseract (OCR will be unavailable). Install tesseract to process images with OCR."
-        )
-
-
-def use_easyocr():
-    if not EASYOCR_AVAILABLE:
-        raise UnsupportedDocument(
-            "Unable to use easyocr (OCR will be unavailable). Install easyocr to process images with OCR."
-        )
-
-
 def use_pdf2_image():
     if not PDF_2_IMAGE:
         raise UnsupportedDocument("Unable to import pdf2image (OCR will be unavailable for pdfs)")
@@ -99,22 +64,10 @@ def use_pdf_plumber():
         raise UnsupportedDocument("Unable to import pdfplumber (pdfs will be unavailable)")
 
 
-def apply_tesseract(*args, **kwargs):
-    use_tesseract()
-    return transformers.apply_tesseract(*args, **kwargs)
-
-
-def apply_easyocr(*args, **kwargs):
-    global EASYOCR_READER
-    use_easyocr()
-    if not EASYOCR_READER:
-        EASYOCR_READER = easyocr.Reader(['en'])  # this needs to run only once to load the model into memory
-    return transformers.apply_easyocr(*args, reader=EASYOCR_READER)
-
-
 class Document(metaclass=abc.ABCMeta):
-    def __init__(self, b):
+    def __init__(self, b, ocr_processor):
         self.b = b
+        self.ocr_processor = ocr_processor
 
     @property
     @abc.abstractmethod
@@ -147,20 +100,14 @@ class PDFDocument(Document):
             words = page.extract_words()
 
             if len(words) == 0:
-                try:
-                    use_tesseract()
-                    if TESSERACT_AVAILABLE:
-                        word_boxes = [x for x in zip(*apply_tesseract(images[i], lang=None, tesseract_config=""))]
-                except UnsupportedDocument:
-                    use_easyocr()
-                    if EASYOCR_AVAILABLE:
-                        word_boxes = [x for x in zip(*apply_easyocr(images[i]))]
+                word_boxes = [x for x in zip(*self.ocr_processor.apply_ocr(images[i]))]
 
             else:
                 word_boxes = [
                     (
                         w["text"],
-                        transformers.normalize_box([w["x0"], w["top"], w["x1"], w["bottom"]], page.width, page.height),
+                        self.ocr_processor.normalize_box([w["x0"], w["top"], w["x1"], w["bottom"]],
+                                                         page.width, page.height),
                     )
                     for w in words
                 ]
@@ -196,14 +143,8 @@ class ImageDocument(Document):
 
     @cached_property
     def context(self) -> Tuple[(str, List[int])]:
-        try:
-            use_tesseract()
-            if TESSERACT_AVAILABLE:
-                words, boxes = apply_tesseract(self.b, lang=None, tesseract_config="")
-        except UnsupportedDocument:
-            use_easyocr()
-            if EASYOCR_AVAILABLE:
-                words, boxes = apply_easyocr(self.b)
+        words, boxes = self.ocr_processor.apply_ocr(self.b)
+
         return {
             "image": [
                 (
@@ -215,7 +156,7 @@ class ImageDocument(Document):
 
 
 @validate_arguments
-def load_document(fpath: str):
+def load_document(fpath: str, ocr_processor_name=Optional[str]):
     if fpath.startswith("http://") or fpath.startswith("https://"):
         resp = requests.get(fpath, stream=True)
         if not resp.ok:
@@ -223,17 +164,34 @@ def load_document(fpath: str):
         b = resp.raw
     else:
         b = open(fpath, "rb")
-    return load_bytes(b, fpath)
+    return load_bytes(b, fpath, ocr_processor_name)
 
 
-def load_bytes(b, fpath):
+def load_bytes(b, fpath, ocr_processor_name=Optional[str]):
+    ocr_processor = get_ocr_processor(ocr_processor_name)
     extension = os.path.basename(fpath).rsplit(".", 1)[-1].split("?")[0].strip()
     if extension in ("pdf"):
-        return PDFDocument(b.read())
+        return PDFDocument(b.read(), ocr_processor=ocr_processor)
     else:
         use_pil()
         try:
             img = Image.open(b)
         except UnidentifiedImageError as e:
             raise UnsupportedDocument(e)
-        return ImageDocument(img)
+        return ImageDocument(img, ocr_processor=ocr_processor)
+
+
+def get_ocr_processor(ocr_processor_name: Optional[str]):
+    if not ocr_processor_name:
+        if TESSERACT_AVAILABLE:
+            return TesseractProcessor()
+        elif EASYOCR_AVAILABLE:
+            return EasyOCRProcessor()
+        else:
+            DummyProcessor()
+    elif ocr_processor_name.lower() == "easyocr" and EASYOCR_AVAILABLE:
+        return EasyOCRProcessor()
+    elif ocr_processor_name.lower() == "tesseract" and TESSERACT_AVAILABLE:
+        return TesseractProcessor()
+    else:
+        DummyProcessor()
