@@ -1,12 +1,12 @@
 import abc
 import os
 from io import BytesIO
-from typing import List, Tuple, Optional
+from typing import List, Tuple, Optional, Dict, Any
 
 import requests
 from pydantic import validate_arguments
 
-from .ocr_processor import TesseractProcessor, TESSERACT_AVAILABLE, EasyOCRProcessor, EASYOCR_AVAILABLE, DummyProcessor
+from .ocr_reader import TesseractReader, TESSERACT_AVAILABLE, EasyOCRReader, EASYOCR_AVAILABLE, DummyOCRReader
 
 try:
     from functools import cached_property as cached_property
@@ -65,9 +65,9 @@ def use_pdf_plumber():
 
 
 class Document(metaclass=abc.ABCMeta):
-    def __init__(self, b, ocr_processor):
+    def __init__(self, b, ocr_reader):
         self.b = b
-        self.ocr_processor = ocr_processor
+        self.ocr_reader = ocr_reader
 
     @property
     @abc.abstractmethod
@@ -79,10 +79,32 @@ class Document(metaclass=abc.ABCMeta):
     def preview(self) -> "Image":
         raise NotImplementedError
 
+    @staticmethod
+    def _normalize_box(box, width, height) -> List[int]:
+        return [
+            max(min(c, 1000), 0)
+            for c in [
+                int(1000 * (box[0] / width)),
+                int(1000 * (box[1] / height)),
+                int(1000 * (box[2] / width)),
+                int(1000 * (box[3] / height)),
+            ]
+        ]
+
+    @staticmethod
+    def _normalize_boxes(image, words, boxes) -> Tuple[List[str], List[List[int]]]:
+        image_width, image_height = image.size
+
+        # finally, normalize the bounding boxes
+        normalized_boxes = [Document._normalize_box(box, image_width, image_height) for box in boxes]
+
+        assert len(words) == len(normalized_boxes), "Not as many words as there are bounding boxes"
+        return words, normalized_boxes
+
 
 class PDFDocument(Document):
     @cached_property
-    def context(self) -> Tuple[(str, List[int])]:
+    def context(self) -> Dict[str, list[tuple["Image", List[Any]]]]:
         pdf = self._pdf
         if pdf is None:
             return {}
@@ -100,14 +122,15 @@ class PDFDocument(Document):
             words = page.extract_words()
 
             if len(words) == 0:
-                word_boxes = [x for x in zip(*self.ocr_processor.apply_ocr(images[i]))]
+                word_boxes = [x for x in zip(*self._normalize_boxes(images[i],
+                                                                    *self.ocr_reader.apply_ocr(images[i])))]
 
             else:
                 word_boxes = [
                     (
                         w["text"],
-                        self.ocr_processor.normalize_box([w["x0"], w["top"], w["x1"], w["bottom"]],
-                                                         page.width, page.height),
+                        self._normalize_box([w["x0"], w["top"], w["x1"], w["bottom"]],
+                                            page.width, page.height),
                     )
                     for w in words
                 ]
@@ -142,8 +165,9 @@ class ImageDocument(Document):
         return [self.b.convert("RGB")]
 
     @cached_property
-    def context(self) -> Tuple[(str, List[int])]:
-        words, boxes = self.ocr_processor.apply_ocr(self.b)
+    def context(self) -> Dict[str, list[tuple["Image", List[Any]]]]:
+        words, boxes = self._normalize_boxes(self.b,
+                                             *self.ocr_reader.apply_ocr(self.b))
 
         return {
             "image": [
@@ -156,7 +180,7 @@ class ImageDocument(Document):
 
 
 @validate_arguments
-def load_document(fpath: str, ocr_processor_name=None):
+def load_document(fpath: str, ocr_reader_name=None):
     if fpath.startswith("http://") or fpath.startswith("https://"):
         resp = requests.get(fpath, stream=True)
         if not resp.ok:
@@ -164,48 +188,48 @@ def load_document(fpath: str, ocr_processor_name=None):
         b = resp.raw
     else:
         b = open(fpath, "rb")
-    return load_bytes(b, fpath, ocr_processor_name=ocr_processor_name)
+    return load_bytes(b, fpath, ocr_reader_name=ocr_reader_name)
 
 
-def load_bytes(b, fpath, ocr_processor_name: Optional[str]):
-    ocr_processor = get_ocr_processor(ocr_processor_name)
+def load_bytes(b, fpath, ocr_reader_name: Optional[str]):
+    ocr_reader = get_ocr_reader(ocr_reader_name)
     extension = os.path.basename(fpath).rsplit(".", 1)[-1].split("?")[0].strip()
     if extension in ("pdf"):
-        return PDFDocument(b.read(), ocr_processor=ocr_processor)
+        return PDFDocument(b.read(), ocr_reader=ocr_reader)
     else:
         use_pil()
         try:
             img = Image.open(b)
         except UnidentifiedImageError as e:
             raise UnsupportedDocument(e)
-        return ImageDocument(img, ocr_processor=ocr_processor)
+        return ImageDocument(img, ocr_reader=ocr_reader)
 
 
-tesseract_processor = None
-easy_ocr_processor = None
+tesseract_reader = None
+easy_ocr_reader = None
 
 
-def get_ocr_processor(ocr_processor_name: Optional[str]):
-    global tesseract_processor
-    global easy_ocr_processor
-    if not ocr_processor_name:
+def get_ocr_reader(ocr_reader_name: Optional[str]):
+    global tesseract_reader
+    global easy_ocr_reader
+    if not ocr_reader_name:
         if TESSERACT_AVAILABLE:
-            if not tesseract_processor:
-                tesseract_processor = TesseractProcessor()
-            return tesseract_processor
+            if not tesseract_reader:
+                tesseract_reader = TesseractReader()
+            return tesseract_reader
         elif EASYOCR_AVAILABLE:
-            if not easy_ocr_processor:
-                easy_ocr_processor = EasyOCRProcessor()
-            return easy_ocr_processor
+            if not easy_ocr_reader:
+                easy_ocr_reader = EasyOCRReader()
+            return easy_ocr_reader
         else:
-            DummyProcessor()
-    elif ocr_processor_name.lower() == "easyocr" and EASYOCR_AVAILABLE:
-        if not easy_ocr_processor:
-            easy_ocr_processor = EasyOCRProcessor()
-        return easy_ocr_processor
-    elif ocr_processor_name.lower() == "tesseract" and TESSERACT_AVAILABLE:
-        if not tesseract_processor:
-            tesseract_processor = TesseractProcessor()
-        return tesseract_processor
+            return DummyOCRReader()
+    elif ocr_reader_name.lower() == "easyocr" and EASYOCR_AVAILABLE:
+        if not easy_ocr_reader:
+            easy_ocr_reader = EasyOCRReader()
+        return easy_ocr_reader
+    elif ocr_reader_name.lower() == "tesseract" and TESSERACT_AVAILABLE:
+        if not tesseract_reader:
+            tesseract_reader = TesseractReader()
+        return tesseract_reader
     else:
-        return DummyProcessor()
+        return DummyOCRReader()
