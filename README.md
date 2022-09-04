@@ -19,24 +19,32 @@ question you want to ask. DocQuery is created by the team at [Impira](https://ww
 To install `docquery`, you can simply run `pip install docquery`. This will install the command line tool as well as the library.
 If you want to run OCR on images, then you must also install the [tesseract](https://github.com/tesseract-ocr/tesseract) library:
 
-* Mac OS X (using [Homebrew](https://brew.sh/)): `brew install tesseract`
-* Ubuntu: `apt install tesseract-ocr`
+- Mac OS X (using [Homebrew](https://brew.sh/)):
+
+  ```sh
+  brew install tesseract
+  ```
+
+- Ubuntu:
+
+  ```sh
+  apt install tesseract-ocr
+  ```
 
 `docquery` scan allows you to ask one or more questions to a single document or directory of files. For example, you can
-find the invoice number https://templates.invoicehome.com/invoice-template-us-neat-750px.png with
+find the invoice number <https://templates.invoicehome.com/invoice-template-us-neat-750px.png> with:
 
 ```bash
-$ docquery scan "What is the invoice number?" https://templates.invoicehome.com/invoice-template-us-neat-750px.png
+docquery scan "What is the invoice number?" https://templates.invoicehome.com/invoice-template-us-neat-750px.png
 ```
 
 If you have a folder of documents on your machine, you can run something like
 
 ```bash
-$ docquery scan "What is the effective date?" /path/to/contracts/folder
+docquery scan "What is the effective date?" /path/to/contracts/folder
 ```
 
 to determine the effective date of every document in the folder.
-
 
 ## Quickstart (Library)
 
@@ -70,22 +78,22 @@ which you can access directly.
 
 DocQuery is intended to have a small install footprint and be simple to work with. As a result, it has some limitations:
 
-* Models must be pre-trained. Although DocQuery uses a zero-shot model that can adapt based on the question you provide, it does not learn from your data.
-* Support for images and PDFs. Currently DocQuery supports images and PDFs, with or without embedded text. It does not support word documents, emails, spreadsheets, etc.
-* Scalar text outputs. DocQuery only produces text outputs (answers). It does not support richer scalar types (i.e. it treats numbers and dates as strings) or tables.
+- Models must be pre-trained. Although DocQuery uses a zero-shot model that can adapt based on the question you provide, it does not learn from your data.
+- Support for images and PDFs. Currently DocQuery supports images and PDFs, with or without embedded text. It does not support word documents, emails, spreadsheets, etc.
+- Scalar text outputs. DocQuery only produces text outputs (answers). It does not support richer scalar types (i.e. it treats numbers and dates as strings) or tables.
 
 ## Using Donut
 
 If you'd like to test `docquery` with [Donut](https://arxiv.org/abs/2111.15664), you must install a special version of transformers:
 
 ```bash
-$ pip install git+https://github.com/impira/transformers@153d1361c7dcc91c7735cae73e1f594cfcab3e21
+pip install git+https://github.com/impira/transformers@153d1361c7dcc91c7735cae73e1f594cfcab3e21
 ```
 
 since it has not yet been released in a tagged release. You can then run
 
 ```bash
-$ docquery scan "What is the effective date?" /path/to/contracts/folder --checkpoint 'naver-clova-ix/donut-base-finetuned-docvqa'
+docquery scan "What is the effective date?" /path/to/contracts/folder --checkpoint 'naver-clova-ix/donut-base-finetuned-docvqa'
 ```
 
 ## Where to go from here
@@ -118,11 +126,11 @@ with us at [oss@impira.com](mailto:oss@impira.com) with any questions or feedbac
 
 DocQuery would not be possible without the contributions of many open source projects:
 
-* [pdfplumber](https://github.com/jsvine/pdfplumber) / [pdfminer.six](https://github.com/pdfminer/pdfminer.six)
-* [Pillow](https://pillow.readthedocs.io/en/stable/)
-* [pytorch](https://pytorch.org/)
-* [tesseract](https://github.com/tesseract-ocr/tesseract) / [pytesseract](https://pypi.org/project/pytesseract/)
-* [transformers](https://github.com/impira/transformers)
+- [pdfplumber](https://github.com/jsvine/pdfplumber) / [pdfminer.six](https://github.com/pdfminer/pdfminer.six)
+- [Pillow](https://pillow.readthedocs.io/en/stable/)
+- [pytorch](https://pytorch.org/)
+- [tesseract](https://github.com/tesseract-ocr/tesseract) / [pytesseract](https://pypi.org/project/pytesseract/)
+- [transformers](https://github.com/impira/transformers)
 
 and many others!
 
@@ -130,6 +138,6 @@ and many others!
 
 This project is licensed under the [MIT license](LICENSE).
 
-It contains code that is copied and adapted from transformers (https://github.com/huggingface/transformers),
+It contains code that is copied and adapted from transformers (<https://github.com/huggingface/transformers>),
 which is [Apache 2.0 licensed](http://www.apache.org/licenses/LICENSE-2.0). Files containing this code have
 been marked as such in their comments.
