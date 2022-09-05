@@ -18,3 +18,7 @@ repos:
           - --settings-path
           - .isort.cfg
         files: ./
+  - repo: https://github.com/codespell-project/codespell
+    rev: v2.2.1
+    hooks:
+    - id: codespell

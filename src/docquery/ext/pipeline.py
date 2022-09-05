@@ -23,7 +23,7 @@ logger = logging.get_logger(__name__)
 
 # normalize_bbox() and apply_tesseract() are derived from apply_tesseract in models/layoutlmv3/feature_extraction_layoutlmv3.py.
 # However, because the pipeline may evolve from what layoutlmv3 currently does, it's copied (vs. imported) to avoid creating an
-# unecessary dependency.
+# unnecessary dependency.
 def normalize_box(box, width, height):
     return [
         int(1000 * (box[0] / width)),
