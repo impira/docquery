@@ -1,12 +1,12 @@
 import abc
 import os
 from io import BytesIO
-from typing import List, Tuple, Optional, Dict, Any
+from typing import Any, Dict, List, Optional, Tuple
 
 import requests
 from pydantic import validate_arguments
 
-from .ocr_reader import TesseractReader, TESSERACT_AVAILABLE, EasyOCRReader, EASYOCR_AVAILABLE, DummyOCRReader
+from .ocr_reader import EASYOCR_AVAILABLE, TESSERACT_AVAILABLE, DummyOCRReader, EasyOCRReader, TesseractReader
 
 try:
     from functools import cached_property as cached_property
@@ -80,7 +80,13 @@ class Document(metaclass=abc.ABCMeta):
         raise NotImplementedError
 
     @staticmethod
-    def _normalize_box(box, width, height) -> List[int]:
+    def _normalize_box(box: List[int], width: int, height: int) -> List[int]:
+        """
+        box is [x1,y1,x2,y2] where x1,y1 are the top left corner of box and x2,y2 is the bottom right corner
+        This function scales the distance between boxes to be on a fixed scale
+        It is derived from the preprocessing code for LayoutLM
+        """
+
         return [
             max(min(c, 1000), 0)
             for c in [
@@ -92,19 +98,23 @@ class Document(metaclass=abc.ABCMeta):
         ]
 
     @staticmethod
-    def _normalize_boxes(image, words, boxes) -> Tuple[List[str], List[List[int]]]:
-        image_width, image_height = image.size
-
+    def _normalize_boxes(
+            words: List[str], boxes: List[List[int]], width: int, height: int
+    ) -> Tuple[List[str], List[List[int]]]:
         # finally, normalize the bounding boxes
-        normalized_boxes = [Document._normalize_box(box, image_width, image_height) for box in boxes]
+        normalized_boxes = [Document._normalize_box(box, width, height) for box in boxes]
 
         assert len(words) == len(normalized_boxes), "Not as many words as there are bounding boxes"
         return words, normalized_boxes
 
+    @staticmethod
+    def _make_word_boxes(words, boxes):
+        return [x for x in zip(words, boxes)]
+
 
 class PDFDocument(Document):
     @cached_property
-    def context(self) -> Dict[str, List[Tuple["Image", List[Any]]]]:
+    def context(self) -> Dict[str, List[Tuple["Image.Image", List[Any]]]]:
         pdf = self._pdf
         if pdf is None:
             return {}
@@ -122,18 +132,18 @@ class PDFDocument(Document):
             words = page.extract_words()
 
             if len(words) == 0:
-                word_boxes = [x for x in zip(*self._normalize_boxes(images[i],
-                                                                    *self.ocr_reader.apply_ocr(images[i])))]
+                word_boxes = self._make_word_boxes(
+                    *self._normalize_boxes(
+                        *self.ocr_reader.apply_ocr(images[i]),
+                        images[i].width,
+                        images[i].height,
+                    )
+                )
 
             else:
-                word_boxes = [
-                    (
-                        w["text"],
-                        self._normalize_box([w["x0"], w["top"], w["x1"], w["bottom"]],
-                                            page.width, page.height),
-                    )
-                    for w in words
-                ]
+                words = [w["text"] for w in words]
+                boxes = [[w["x0"], w["top"], w["x1"], w["bottom"]] for w in words]
+                word_boxes = self._make_word_boxes(*self._normalize_boxes(words, boxes, page.width, page.height))
 
             img_words.append((images[i], word_boxes))
         return {"image": img_words}
@@ -165,15 +175,14 @@ class ImageDocument(Document):
         return [self.b.convert("RGB")]
 
     @cached_property
-    def context(self) -> Dict[str, List[Tuple["Image", List[Any]]]]:
-        words, boxes = self._normalize_boxes(self.b,
-                                             *self.ocr_reader.apply_ocr(self.b))
+    def context(self) -> Dict[str, List[Tuple["Image.Image", List[Any]]]]:
+        words, boxes = self._normalize_boxes(*self.ocr_reader.apply_ocr(self.b), self.b.width, self.b.height)
 
         return {
             "image": [
                 (
                     self.b,
-                    [x for x in zip(words, boxes)],
+                    self._make_word_boxes(words, boxes),
                 )
             ]
         }
