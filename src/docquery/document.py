@@ -130,9 +130,9 @@ class PDFDocument(Document):
 
         img_words = []
         for i, page in enumerate(pdf.pages):
-            words = page.extract_words()
+            extracted_words = page.extract_words()
 
-            if len(words) == 0:
+            if len(extracted_words) == 0:
                 word_boxes = self._make_word_boxes(
                     *self._normalize_boxes(
                         *self.ocr_reader.apply_ocr(images[i]),
@@ -142,8 +142,8 @@ class PDFDocument(Document):
                 )
 
             else:
-                words = [w["text"] for w in words]
-                boxes = [[w["x0"], w["top"], w["x1"], w["bottom"]] for w in words]
+                words = [w["text"] for w in extracted_words]
+                boxes = [[w["x0"], w["top"], w["x1"], w["bottom"]] for w in extracted_words]
                 word_boxes = self._make_word_boxes(*self._normalize_boxes(words, boxes, page.width, page.height))
 
             img_words.append((images[i], word_boxes))

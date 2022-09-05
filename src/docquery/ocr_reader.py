@@ -1,5 +1,6 @@
 import abc
 import logging
+from abc import ABC
 from typing import Any, List, Tuple
 
 import numpy as np
@@ -38,7 +39,7 @@ except ImportError:
 class OCRReader(metaclass=abc.ABCMeta):
     def __init__(self):
         # TODO: add device here
-        self.check_if_available()
+        self._check_if_available()
 
     @abc.abstractmethod
     def apply_ocr(self, image: "Image.Image") -> Tuple[List[Any], List[List[int]]]:
@@ -46,7 +47,7 @@ class OCRReader(metaclass=abc.ABCMeta):
 
     @staticmethod
     @abc.abstractmethod
-    def check_if_available():
+    def _check_if_available():
         raise NotImplementedError
 
 
@@ -64,7 +65,7 @@ class TesseractReader(OCRReader):
 
         # filter empty words and corresponding coordinates
         irrelevant_indices = set(idx for idx, word in enumerate(words) if not word.strip())
-        words = [word.strip() for idx, word in enumerate(words) if idx not in irrelevant_indices]
+        words = [word for idx, word in enumerate(words) if idx not in irrelevant_indices]
         left = [coord for idx, coord in enumerate(left) if idx not in irrelevant_indices]
         top = [coord for idx, coord in enumerate(top) if idx not in irrelevant_indices]
         width = [coord for idx, coord in enumerate(width) if idx not in irrelevant_indices]
@@ -76,7 +77,7 @@ class TesseractReader(OCRReader):
         return words, actual_boxes
 
     @staticmethod
-    def check_if_available():
+    def _check_if_available():
         if not TESSERACT_AVAILABLE:
             raise NoOCRReaderFound(
                 "Unable to use pytesseract (OCR will be unavailable). Install tesseract to process images with OCR."
@@ -100,7 +101,7 @@ class EasyOCRReader(OCRReader):
 
         # filter empty words and corresponding coordinates
         irrelevant_indices = set(idx for idx, word in enumerate(words) if not word.strip())
-        words = [word.strip() for idx, word in enumerate(words) if idx not in irrelevant_indices]
+        words = [word for idx, word in enumerate(words) if idx not in irrelevant_indices]
         boxes = [coords for idx, coords in enumerate(boxes) if idx not in irrelevant_indices]
 
         # turn coordinates into (left, top, left+width, top+height) format
@@ -109,7 +110,7 @@ class EasyOCRReader(OCRReader):
         return words, actual_boxes
 
     @staticmethod
-    def check_if_available():
+    def _check_if_available():
         if not EASYOCR_AVAILABLE:
             raise NoOCRReaderFound(
                 "Unable to use easyocr (OCR will be unavailable). Install easyocr to process images with OCR."
