@@ -51,6 +51,14 @@ to feed into the pipeline.
 ...     print(q, p(question=q, **doc.context))
 ```
 
+## Quickstart (Docker)
+
+To run DocQuery with Docker, run the following:
+`docker build -t docscan-python-app .`
+`docker run -it --rm --name docscanner-app docscan-python-app`
+
+The example command can be modified in `entrypoint.sh`
+
 ## Use cases
 
 DocQuery excels at a number of use cases involving structured, semi-structured, or unstructured documents. You can ask questions about

@@ -1,5 +1,4 @@
 #!/bin/bash
 set -e
 
-# Do something here
-docquery scan "What is the invoice number?" https://slicedinvoices.com/pdf/wordpress-pdf-invoice-plugin-sample.pdf
+docquery scan "What is the invoice number?" https://templates.invoicehome.com/invoice-template-us-neat-750px.png
