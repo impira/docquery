@@ -5,7 +5,6 @@ from ..config import get_logger
 from ..document import UnsupportedDocument, load_document
 from ..pipeline import get_pipeline
 
-
 log = get_logger("scan")
 
 
@@ -21,6 +20,10 @@ def build_parser(subparsers, parent_parser):
     )
 
     parser.add_argument("path", type=str, help="The file or directory to scan")
+
+    parser.add_argument(
+        "ocr", choices=["tesseract", "easyocr", None], default=None, help="The orc engine you would like to use"
+    )
 
     parser.set_defaults(func=main)
     return parser
@@ -38,7 +41,7 @@ def main(args):
     docs = []
     for p in paths:
         try:
-            docs.append((p, load_document(str(p))))
+            docs.append((p, load_document(str(p), ocr_reader_name=args.ocr)))
             log.info(f"Loading {p}")
         except UnsupportedDocument as e:
             log.warning(f"Cannot load {p}: {e}. Skipping...")
