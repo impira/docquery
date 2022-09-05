@@ -8,6 +8,7 @@ from pydantic import validate_arguments
 
 from .ocr_reader import EASYOCR_AVAILABLE, TESSERACT_AVAILABLE, DummyOCRReader, EasyOCRReader, TesseractReader
 
+
 try:
     from functools import cached_property as cached_property
 except ImportError:
@@ -99,7 +100,7 @@ class Document(metaclass=abc.ABCMeta):
 
     @staticmethod
     def _normalize_boxes(
-            words: List[str], boxes: List[List[int]], width: int, height: int
+        words: List[str], boxes: List[List[int]], width: int, height: int
     ) -> Tuple[List[str], List[List[int]]]:
         # finally, normalize the bounding boxes
         normalized_boxes = [Document._normalize_box(box, width, height) for box in boxes]

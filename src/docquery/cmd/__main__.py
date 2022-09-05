@@ -43,6 +43,9 @@ def main(args=None):
     parent_parser.add_argument(
         "--checkpoint", default=CHECKPOINT, help=f"A custom model checkpoint to use (other than {CHECKPOINT})"
     )
+    parent_parser.add_argument(
+        "ocr", choices=["tesseract", "easyocr", None], default=None, help="The orc engine you would like to use"
+    )
 
     parser = argparse.ArgumentParser(description="docquery is a cli tool to work with documents.")
     subparsers = parser.add_subparsers(help="sub-command help", dest="subcommand", required=True)
