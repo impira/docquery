@@ -1,12 +1,12 @@
 import abc
 import os
 from io import BytesIO
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any, Dict, List, Optional, Tuple, Union
 
 import requests
 from pydantic import validate_arguments
 
-from .ocr_reader import get_ocr_reader
+from .ocr_reader import NoOCRReaderFound, OCRReader, get_ocr_reader
 
 
 try:
@@ -125,9 +125,10 @@ class Document(metaclass=abc.ABCMeta):
         processed_pages = []
         for image, words, boxes, dimensions in zip(images, words_by_page, boxes_by_page, dimensions_by_page):
             width, height = dimensions
-            words, boxes = Document._normalize_boxes(words, boxes, width, height)
-            wordboxes = Document._make_word_boxes(words, boxes)
-            processed_pages.append((image, wordboxes))
+            words, normalized_boxes = Document._normalize_boxes(words, boxes, width, height)
+            assert len(words) == len(normalized_boxes), "Not as many words as there are bounding boxes"
+            word_boxes = Document._make_word_boxes(words, normalized_boxes)
+            processed_pages.append((image, word_boxes))
 
             return {"image": processed_pages}
 
@@ -201,7 +202,7 @@ class ImageDocument(Document):
 
 
 @validate_arguments
-def load_document(fpath: str, ocr_reader_name=None):
+def load_document(fpath: str, ocr_reader: Optional[Union[str, OCRReader]] = None):
     if fpath.startswith("http://") or fpath.startswith("https://"):
         resp = requests.get(fpath, stream=True)
         if not resp.ok:
@@ -209,11 +210,15 @@ def load_document(fpath: str, ocr_reader_name=None):
         b = resp.raw
     else:
         b = open(fpath, "rb")
-    return load_bytes(b, fpath, ocr_reader_name=ocr_reader_name)
+    return load_bytes(b, fpath, ocr_reader=ocr_reader)
 
 
-def load_bytes(b, fpath, ocr_reader_name: Optional[str]):
-    ocr_reader = get_ocr_reader(ocr_reader_name)
+def load_bytes(b, fpath, ocr_reader: Optional[Union[str, Any]]):
+    if not ocr_reader or isinstance(ocr_reader, str):
+        ocr_reader = get_ocr_reader(ocr_reader)
+    elif not isinstance(ocr_reader, OCRReader):
+        raise NoOCRReaderFound(f"{ocr_reader} is not a supported OCRReader class")
+
     extension = os.path.basename(fpath).rsplit(".", 1)[-1].split("?")[0].strip()
     if extension in ("pdf"):
         return PDFDocument(b.read(), ocr_reader=ocr_reader)

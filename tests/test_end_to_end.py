@@ -1,11 +1,12 @@
 from pathlib import Path
-from typing import Any, Dict, List
+from typing import Dict, List
 
 import pytest
 from pydantic import BaseModel
 from transformers.testing_utils import nested_simplify
 
 from docquery.document import load_document
+from docquery.ocr_reader import TesseractReader
 from docquery.pipeline import get_pipeline
 
 
@@ -89,4 +90,23 @@ def test_impira_dataset(example, model):
     pipeline = get_pipeline(checkpoint=CHECKPOINTS[model])
     for qa in example.qa_pairs:
         resp = pipeline(question=qa.question, **document.context, top_k=1)
-        assert nested_simplify(resp, decimals=4) == qa.answers[model]
+        assert nested_simplify(resp, decimals=3) == qa.answers[model]
+
+
+def test_run_with_choosen_OCR_str():
+    example = EXAMPLES[0]
+    document = load_document(example.path, "tesseract")
+    pipeline = get_pipeline(checkpoint=CHECKPOINTS["LayoutLMv1"])
+    for qa in example.qa_pairs:
+        resp = pipeline(question=qa.question, **document.context, top_k=1)
+        assert nested_simplify(resp, decimals=3) == qa.answers["LayoutLMv1"]
+
+
+def test_run_with_choosen_OCR_instance():
+    example = EXAMPLES[0]
+    reader = TesseractReader()
+    document = load_document(example.path, reader)
+    pipeline = get_pipeline(checkpoint=CHECKPOINTS["LayoutLMv1"])
+    for qa in example.qa_pairs:
+        resp = pipeline(question=qa.question, **document.context, top_k=1)
+        assert nested_simplify(resp, decimals=3) == qa.answers["LayoutLMv1"]
