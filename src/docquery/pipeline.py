@@ -1,13 +1,13 @@
 from collections import OrderedDict
 
 import torch
-from transformers import AutoConfig, AutoTokenizer, pipeline
+from transformers import AutoConfig, AutoModel, AutoTokenizer, pipeline
 from transformers.models.auto.auto_factory import _BaseAutoModelClass, _LazyAutoMapping
 from transformers.models.auto.configuration_auto import CONFIG_MAPPING_NAMES
-from transformers.models.layoutlm.configuration_layoutlm import LayoutLMConfig
 from transformers.pipelines import PIPELINE_REGISTRY
 
-from .ext.model import LayoutLMForQuestionAnswering
+from .ext.config import LayoutLMDocQueryConfig
+from .ext.model import LayoutLMDocQueryForQuestionAnswering
 from .ext.pipeline import DocumentQuestionAnsweringPipeline
 
 
@@ -16,7 +16,7 @@ REVISION = "3a93017fc2d200d68d0c2cc0fa62eb8d50314605"
 
 MODEL_FOR_DOCUMENT_QUESTION_ANSWERING_MAPPING_NAMES = OrderedDict(
     [
-        ("layoutlm", "LayoutLMForQuestionAnswering"),
+        ("layoutlm-docquery", "LayoutLMDocQueryForQuestionAnswering"),
         ("donut-swin", "DonutSwinModel"),
     ]
 )
@@ -28,6 +28,11 @@ MODEL_FOR_DOCUMENT_QUESTION_ANSWERING_MAPPING = _LazyAutoMapping(
 
 class AutoModelForDocumentQuestionAnswering(_BaseAutoModelClass):
     _model_mapping = MODEL_FOR_DOCUMENT_QUESTION_ANSWERING_MAPPING
+
+
+AutoConfig.register("layoutlm-docquery", LayoutLMDocQueryConfig)
+AutoModel.register(LayoutLMDocQueryConfig, LayoutLMDocQueryForQuestionAnswering)
+AutoModelForDocumentQuestionAnswering.register(LayoutLMDocQueryConfig, LayoutLMDocQueryForQuestionAnswering)
 
 
 PIPELINE_REGISTRY.register_pipeline(
@@ -49,7 +54,7 @@ def get_pipeline(checkpoint=None, revision=None, device=None):
 
     kwargs = {}
     if checkpoint == CHECKPOINT:
-        config = LayoutLMConfig.from_pretrained(checkpoint, revision=revision)
+        config = LayoutLMDocQueryConfig.from_pretrained(checkpoint, revision=revision)
         kwargs["add_prefix_space"] = True
     else:
         config = AutoConfig.from_pretrained(checkpoint, revision=revision)
@@ -62,7 +67,7 @@ def get_pipeline(checkpoint=None, revision=None, device=None):
     )
 
     if checkpoint == CHECKPOINT:
-        model = LayoutLMForQuestionAnswering.from_pretrained(checkpoint, revision=revision)
+        model = LayoutLMDocQueryForQuestionAnswering.from_pretrained(checkpoint, revision=revision)
     else:
         model = checkpoint
 
