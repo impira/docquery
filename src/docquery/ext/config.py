@@ -20,15 +20,15 @@ class LayoutLMDocQueryConfig(LayoutLMConfig):
     model_type = "layoutlm-docquery"
 
     def __init__(
+        self,
         # New stuff added for DocQuery
         token_classification=False,
         token_classifier_reduction="mean",
         token_classifier_constant=1.0,
         **kwargs
     ):
-        super().__init__(
-            token_classification=token_classification,
-            token_classifier_reduction=token_classifier_reduction,
-            token_classifier_constant=token_classifier_constant,
-            **kwargs,
-        )
+        super().__init__(**kwargs)
+
+        self.token_classification = token_classification
+        self.token_classifier_reduction = token_classifier_reduction
+        self.token_classifier_constant = token_classifier_constant

@@ -7,7 +7,7 @@ from torch.nn import CrossEntropyLoss, Linear
 from transformers import LayoutLMModel, LayoutLMPreTrainedModel
 from transformers.modeling_outputs import QuestionAnsweringModelOutput as QuestionAnsweringModelOutputBase
 
-from .config import LayoutLMDocQueryConfig
+from .config import LayoutLMConfig, LayoutLMDocQueryConfig
 
 
 @dataclass
@@ -149,7 +149,7 @@ class LayoutLMDocQueryForQuestionAnswering(LayoutLMPreTrainedModel):
             total_loss = (start_loss + end_loss) / 2
 
         token_logits = None
-        if self.token_classification:
+        if self.config.token_classification:
             token_logits = self.token_classifier_head(sequence_output)
 
             if token_labels is not None:
@@ -183,3 +183,14 @@ class LayoutLMDocQueryForQuestionAnswering(LayoutLMPreTrainedModel):
             hidden_states=outputs.hidden_states,
             attentions=outputs.attentions,
         )
+
+
+# This is a thin wrapper around LayoutLMDocQueryForQuestionAnswering that simply instantiates
+# a default value for token_classification. Once we update transformers to be a version that
+# includes the upstremed LayoutLMForQuestionAnswering class, we can remove this.
+class LayoutLMForQuestionAnswering(LayoutLMDocQueryForQuestionAnswering):
+    config_class = LayoutLMConfig
+
+    def __init__(self, config, **kwargs):
+        config.token_classification = False
+        super().__init__(config, **kwargs)

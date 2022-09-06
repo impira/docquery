@@ -6,8 +6,8 @@ from transformers.models.auto.auto_factory import _BaseAutoModelClass, _LazyAuto
 from transformers.models.auto.configuration_auto import CONFIG_MAPPING_NAMES
 from transformers.pipelines import PIPELINE_REGISTRY
 
-from .ext.config import LayoutLMDocQueryConfig
-from .ext.model import LayoutLMDocQueryForQuestionAnswering
+from .ext.config import LayoutLMConfig, LayoutLMDocQueryConfig
+from .ext.model import LayoutLMDocQueryForQuestionAnswering, LayoutLMForQuestionAnswering
 from .ext.pipeline import DocumentQuestionAnsweringPipeline
 
 
@@ -16,6 +16,7 @@ REVISION = "3a93017fc2d200d68d0c2cc0fa62eb8d50314605"
 
 MODEL_FOR_DOCUMENT_QUESTION_ANSWERING_MAPPING_NAMES = OrderedDict(
     [
+        ("layoutlm", "LayoutLMForQuestionAnswering"),
         ("layoutlm-docquery", "LayoutLMDocQueryForQuestionAnswering"),
         ("donut-swin", "DonutSwinModel"),
     ]
@@ -54,7 +55,7 @@ def get_pipeline(checkpoint=None, revision=None, device=None):
 
     kwargs = {}
     if checkpoint == CHECKPOINT:
-        config = LayoutLMDocQueryConfig.from_pretrained(checkpoint, revision=revision)
+        config = LayoutLMConfig.from_pretrained(checkpoint, revision=revision)
         kwargs["add_prefix_space"] = True
     else:
         config = AutoConfig.from_pretrained(checkpoint, revision=revision)
@@ -67,7 +68,7 @@ def get_pipeline(checkpoint=None, revision=None, device=None):
     )
 
     if checkpoint == CHECKPOINT:
-        model = LayoutLMDocQueryForQuestionAnswering.from_pretrained(checkpoint, revision=revision)
+        model = LayoutLMForQuestionAnswering.from_pretrained(checkpoint, revision=revision)
     else:
         model = checkpoint
 
