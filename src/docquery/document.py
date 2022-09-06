@@ -6,7 +6,7 @@ from typing import Any, Dict, List, Optional, Tuple
 import requests
 from pydantic import validate_arguments
 
-from .ocr_reader import EASYOCR_AVAILABLE, TESSERACT_AVAILABLE, DummyOCRReader, EasyOCRReader, TesseractReader
+from .ocr_reader import get_ocr_reader
 
 
 try:
@@ -105,12 +105,31 @@ class Document(metaclass=abc.ABCMeta):
         # finally, normalize the bounding boxes
         normalized_boxes = [Document._normalize_box(box, width, height) for box in boxes]
 
-        assert len(words) == len(normalized_boxes), "Not as many words as there are bounding boxes"
         return words, normalized_boxes
 
     @staticmethod
-    def _make_word_boxes(words, boxes):
-        return [x for x in zip(words, boxes)]
+    def _make_word_boxes(words: List[str], normalized_boxes: List[List[int]]):
+        return [x for x in zip(words, normalized_boxes)]
+
+    @staticmethod
+    def _generate_document_output(
+        images: List["Image.Image"],
+        words_by_page: List[List[str]],
+        boxes_by_page: List[List[List[int]]],
+        dimensions_by_page: List[Tuple[int, int]],
+    ) -> Dict[str, List[Tuple["Image.Image", List[Any]]]]:
+        # pages_dimensions (width, height)
+        assert len(images) == len(dimensions_by_page)
+        assert len(images) == len(words_by_page)
+        assert len(images) == len(boxes_by_page)
+        processed_pages = []
+        for image, words, boxes, dimensions in zip(images, words_by_page, boxes_by_page, dimensions_by_page):
+            width, height = dimensions
+            words, boxes = Document._normalize_boxes(words, boxes, width, height)
+            wordboxes = Document._make_word_boxes(words, boxes)
+            processed_pages.append((image, wordboxes))
+
+            return {"image": processed_pages}
 
 
 class PDFDocument(Document):
@@ -128,26 +147,26 @@ class PDFDocument(Document):
                 f" pdf2image thinks there are {len(images)}"
             )
 
-        img_words = []
+        words_by_page = []
+        boxes_by_page = []
+        dimensions_by_page = []
         for i, page in enumerate(pdf.pages):
             extracted_words = page.extract_words()
 
             if len(extracted_words) == 0:
-                word_boxes = self._make_word_boxes(
-                    *self._normalize_boxes(
-                        *self.ocr_reader.apply_ocr(images[i]),
-                        images[i].width,
-                        images[i].height,
-                    )
-                )
+                words, boxes = self.ocr_reader.apply_ocr(images[i])
+                words_by_page.append(words)
+                boxes_by_page.append(boxes)
+                dimensions_by_page.append((images[i].width, images[i].height))
 
             else:
                 words = [w["text"] for w in extracted_words]
                 boxes = [[w["x0"], w["top"], w["x1"], w["bottom"]] for w in extracted_words]
-                word_boxes = self._make_word_boxes(*self._normalize_boxes(words, boxes, page.width, page.height))
+                words_by_page.append(words)
+                boxes_by_page.append(boxes)
+                dimensions_by_page.append((page.width, page.height))
 
-            img_words.append((images[i], word_boxes))
-        return {"image": img_words}
+        return self._generate_document_output(images, words_by_page, boxes_by_page, dimensions_by_page)
 
     @cached_property
     def preview(self) -> "Image":
@@ -177,16 +196,8 @@ class ImageDocument(Document):
 
     @cached_property
     def context(self) -> Dict[str, List[Tuple["Image.Image", List[Any]]]]:
-        words, boxes = self._normalize_boxes(*self.ocr_reader.apply_ocr(self.b), self.b.width, self.b.height)
-
-        return {
-            "image": [
-                (
-                    self.b,
-                    self._make_word_boxes(words, boxes),
-                )
-            ]
-        }
+        words, boxes = self.ocr_reader.apply_ocr(self.b)
+        return self._generate_document_output([self.b], [words], [boxes], [(self.b.width, self.b.height)])
 
 
 @validate_arguments
@@ -213,33 +224,3 @@ def load_bytes(b, fpath, ocr_reader_name: Optional[str]):
         except UnidentifiedImageError as e:
             raise UnsupportedDocument(e)
         return ImageDocument(img, ocr_reader=ocr_reader)
-
-
-tesseract_reader = None
-easy_ocr_reader = None
-
-
-def get_ocr_reader(ocr_reader_name: Optional[str]):
-    global tesseract_reader
-    global easy_ocr_reader
-    if not ocr_reader_name:
-        if TESSERACT_AVAILABLE:
-            if not tesseract_reader:
-                tesseract_reader = TesseractReader()
-            return tesseract_reader
-        elif EASYOCR_AVAILABLE:
-            if not easy_ocr_reader:
-                easy_ocr_reader = EasyOCRReader()
-            return easy_ocr_reader
-        else:
-            return DummyOCRReader()
-    elif ocr_reader_name.lower() == "easyocr" and EASYOCR_AVAILABLE:
-        if not easy_ocr_reader:
-            easy_ocr_reader = EasyOCRReader()
-        return easy_ocr_reader
-    elif ocr_reader_name.lower() == "tesseract" and TESSERACT_AVAILABLE:
-        if not tesseract_reader:
-            tesseract_reader = TesseractReader()
-        return tesseract_reader
-    else:
-        return DummyOCRReader()

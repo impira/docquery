@@ -1,7 +1,7 @@
 import abc
 import logging
 from abc import ABC
-from typing import Any, List, Tuple
+from typing import Any, List, Optional, Tuple
 
 import numpy as np
 
@@ -14,14 +14,17 @@ class NoOCRReaderFound(Exception):
         return f"Could not load OCR Reader: {self.e}"
 
 
-TESSERACT_AVAILABLE = False
-EASYOCR_AVAILABLE = False
+OCR_AVAILABLE = {
+    "tesseract": False,
+    "easyocr": False,
+    "dummy": True,
+}
 
 try:
     import pytesseract  # noqa
 
     pytesseract.get_tesseract_version()
-    TESSERACT_AVAILABLE = True
+    OCR_AVAILABLE["tesseract"] = True
 except ImportError:
     pass
 except pytesseract.TesseractNotFoundError as e:
@@ -31,12 +34,22 @@ except pytesseract.TesseractNotFoundError as e:
 try:
     import easyocr  # noqa
 
-    EASYOCR_AVAILABLE = True
+    OCR_AVAILABLE["easyocr"] = True
 except ImportError:
     pass
 
 
-class OCRReader(metaclass=abc.ABCMeta):
+class SingletonMeta(type):
+    _instances = {}
+
+    def __call__(cls, *args, **kwargs):
+        if cls not in cls._instances:
+            instance = super().__call__(*args, **kwargs)
+            cls._instances[cls] = instance
+        return cls._instances[cls]
+
+
+class OCRReader(metaclass=SingletonMeta):
     def __init__(self):
         # TODO: add device here
         self._check_if_available()
@@ -78,7 +91,7 @@ class TesseractReader(OCRReader):
 
     @staticmethod
     def _check_if_available():
-        if not TESSERACT_AVAILABLE:
+        if not OCR_AVAILABLE["tesseract"]:
             raise NoOCRReaderFound(
                 "Unable to use pytesseract (OCR will be unavailable). Install tesseract to process images with OCR."
             )
@@ -111,7 +124,7 @@ class EasyOCRReader(OCRReader):
 
     @staticmethod
     def _check_if_available():
-        if not EASYOCR_AVAILABLE:
+        if not OCR_AVAILABLE["easyocr"]:
             raise NoOCRReaderFound(
                 "Unable to use easyocr (OCR will be unavailable). Install easyocr to process images with OCR."
             )
@@ -128,3 +141,27 @@ class DummyOCRReader(OCRReader):
     @staticmethod
     def _check_if_available():
         logging.warning("Falling back to a dummy OCR reader since none were found.")
+
+
+OCR_MAPPING = {
+    "tesseract": TesseractReader,
+    "easyocr": EasyOCRReader,
+    "dummy": DummyOCRReader,
+}
+
+
+def get_ocr_reader(ocr_reader_name: Optional[str] = None):
+    if not ocr_reader_name:
+        for name, reader in OCR_MAPPING.items():
+            if OCR_AVAILABLE[name]:
+                return reader()
+
+    if ocr_reader_name in OCR_MAPPING.keys():
+        if OCR_AVAILABLE[ocr_reader_name]:
+            return OCR_MAPPING[ocr_reader_name]()
+        else:
+            raise NoOCRReaderFound(f"Failed to load: {ocr_reader_name} Please make sure its installed correctly.")
+    else:
+        raise NoOCRReaderFound(
+            f"Failed to find: {ocr_reader_name} in the available ocr libraries. The choices are: {list(OCR_MAPPING.keys())}"
+        )
