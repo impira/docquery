@@ -94,6 +94,7 @@ def test_assert_fallback_to_dummy():
     },
 )
 def test_fail_to_load_if_called_directly_when_ocr_unavailable():
+    EasyOCRReader._instances = {}
     with pytest.raises(Exception) as e:
         reader = EasyOCRReader()
     assert "Unable to use easyocr (OCR will be unavailable). Install easyocr to process images with OCR." in str(
