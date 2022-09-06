@@ -37,8 +37,8 @@ EXAMPLES = [
             {
                 "question": "What is the purchase amount?",
                 "answers": {
-                    "LayoutLMv1": {"score": 0.9999, "answer": "$1,000,000,000", "words": [97], "page": 0},
-                    "LayoutLMv1-Invoices": {"score": 0.9997, "answer": "$1,000,000,000", "words": [97], "page": 0},
+                    "LayoutLMv1": {"score": 0.9999, "answer": "$1,000,000,000", "word_ids": [97], "page": 0},
+                    "LayoutLMv1-Invoices": {"score": 0.9997, "answer": "$1,000,000,000", "word_ids": [97], "page": 0},
                     "Donut": {"answer": "$1,0000,000,00"},
                 },
             }
@@ -51,8 +51,8 @@ EXAMPLES = [
             {
                 "question": "What is the invoice number?",
                 "answers": {
-                    "LayoutLMv1": {"score": 0.9997, "answer": "us-001", "words": [15], "page": 0},
-                    "LayoutLMv1-Invoices": {"score": 0.9999, "answer": "us-001", "words": [15], "page": 0},
+                    "LayoutLMv1": {"score": 0.9997, "answer": "us-001", "word_ids": [15], "page": 0},
+                    "LayoutLMv1-Invoices": {"score": 0.9999, "answer": "us-001", "word_ids": [15], "page": 0},
                     "Donut": {"answer": "us-001"},
                 },
             }
@@ -65,8 +65,8 @@ EXAMPLES = [
             {
                 "question": "What are net sales for 2020?",
                 "answers": {
-                    "LayoutLMv1": {"score": 0.9429, "answer": "$ 3,750\n", "words": [15, 16], "page": 0},
-                    "LayoutLMv1-Invoices": {"score": 0.9956, "answer": "$ 3,750\n", "words": [15, 16], "page": 0},
+                    "LayoutLMv1": {"score": 0.9429, "answer": "$ 3,750\n", "word_ids": [15, 16], "page": 0},
+                    "LayoutLMv1-Invoices": {"score": 0.9956, "answer": "$ 3,750\n", "word_ids": [15, 16], "page": 0},
                     "Donut": {"answer": "$ 3,750"},
                 },
             }

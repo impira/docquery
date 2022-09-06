@@ -438,7 +438,7 @@ class DocumentQuestionAnsweringPipeline(ChunkPipeline):
                         {
                             "score": float(score),
                             "answer": " ".join(words[i] for i in answer_word_ids),
-                            "words": answer_word_ids,
+                            "word_ids": answer_word_ids,
                             "page": output["page"],
                         }
                     )
