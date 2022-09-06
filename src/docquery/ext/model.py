@@ -1,9 +1,9 @@
+import copy
 from dataclasses import dataclass
 from typing import Optional, Tuple, Union
 
 import torch
 from torch import nn
-from torch.nn import CrossEntropyLoss, Linear
 from transformers import LayoutLMModel, LayoutLMPreTrainedModel
 from transformers.modeling_outputs import QuestionAnsweringModelOutput as QuestionAnsweringModelOutputBase
 
@@ -27,7 +27,7 @@ class LayoutLMTokenClassifierForQuestionAnswering(LayoutLMPreTrainedModel):
 
         self.token_classifier_head = None
         if self.config.token_classification:
-            self.token_classifier_head = Linear(config.hidden_size, 2)
+            self.token_classifier_head = nn.Linear(config.hidden_size, 2)
 
         # Initialize weights and apply final processing
         self.post_init()
@@ -143,7 +143,7 @@ class LayoutLMTokenClassifierForQuestionAnswering(LayoutLMPreTrainedModel):
             start_positions = start_positions.clamp(0, ignored_index)
             end_positions = end_positions.clamp(0, ignored_index)
 
-            loss_fct = CrossEntropyLoss(ignore_index=ignored_index)
+            loss_fct = nn.CrossEntropyLoss(ignore_index=ignored_index)
             start_loss = loss_fct(start_logits, start_positions)
             end_loss = loss_fct(end_logits, end_positions)
             total_loss = (start_loss + end_loss) / 2
@@ -157,7 +157,7 @@ class LayoutLMTokenClassifierForQuestionAnswering(LayoutLMPreTrainedModel):
                 # outputs (batch_size, 512, num_labels), so we need to move the dimensions around
                 # Ref: https://pytorch.org/docs/stable/generated/torch.nn.CrossEntropyLoss.html
                 token_logits_reshaped = torch.movedim(token_logits, source=token_logits.ndim - 1, destination=1)
-                token_loss = CrossEntropyLoss(reduction=self.config.token_classifier_reduction)(
+                token_loss = nn.CrossEntropyLoss(reduction=self.config.token_classifier_reduction)(
                     token_logits_reshaped, token_labels
                 )
 
@@ -192,5 +192,6 @@ class LayoutLMForQuestionAnswering(LayoutLMTokenClassifierForQuestionAnswering):
     config_class = LayoutLMConfig
 
     def __init__(self, config, **kwargs):
+        config = copy.deepcopy(config)
         config.token_classification = False
         super().__init__(config, **kwargs)
