@@ -7,7 +7,7 @@ from torch.nn import CrossEntropyLoss, Linear
 from transformers import LayoutLMModel, LayoutLMPreTrainedModel
 from transformers.modeling_outputs import QuestionAnsweringModelOutput as QuestionAnsweringModelOutputBase
 
-from .config import LayoutLMConfig, LayoutLMDocQueryConfig
+from .config import LayoutLMConfig, LayoutLMTokenClassifierConfig
 
 
 @dataclass
@@ -15,8 +15,8 @@ class QuestionAnsweringModelOutput(QuestionAnsweringModelOutputBase):
     token_logits: Optional[torch.FloatTensor] = None
 
 
-class LayoutLMDocQueryForQuestionAnswering(LayoutLMPreTrainedModel):
-    config_class = LayoutLMDocQueryConfig
+class LayoutLMTokenClassifierForQuestionAnswering(LayoutLMPreTrainedModel):
+    config_class = LayoutLMTokenClassifierConfig
 
     def __init__(self, config, has_visual_segment_embedding=True):
         super().__init__(config)
@@ -185,10 +185,10 @@ class LayoutLMDocQueryForQuestionAnswering(LayoutLMPreTrainedModel):
         )
 
 
-# This is a thin wrapper around LayoutLMDocQueryForQuestionAnswering that simply instantiates
+# This is a thin wrapper around LayoutLMTokenClassifierForQuestionAnswering that simply instantiates
 # a default value for token_classification. Once we update transformers to be a version that
 # includes the upstremed LayoutLMForQuestionAnswering class, we can remove this.
-class LayoutLMForQuestionAnswering(LayoutLMDocQueryForQuestionAnswering):
+class LayoutLMForQuestionAnswering(LayoutLMTokenClassifierForQuestionAnswering):
     config_class = LayoutLMConfig
 
     def __init__(self, config, **kwargs):

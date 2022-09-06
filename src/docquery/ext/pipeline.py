@@ -187,11 +187,9 @@ class DocumentQuestionAnsweringPipeline(ChunkPipeline):
             A `dict` or a list of `dict`: Each result comes as a dictionary with the following keys:
 
             - **score** (`float`) -- The probability associated to the answer.
-            - **start** (`int`) -- The start word index of the answer (in the OCR'd version of the input or provided
-              `word_boxes`).
-            - **end** (`int`) -- The end word index of the answer (in the OCR'd version of the input or provided
-              `word_boxes`).
             - **answer** (`str`) -- The answer to the question.
+            - **words** (`list[int]`) -- The index of each word/box pair that is in the answer
+            - **page** (`int`) -- The page of the answer
         """
         if question is None:
             question = image["question"]
@@ -440,8 +438,8 @@ class DocumentQuestionAnsweringPipeline(ChunkPipeline):
                         {
                             "score": float(score),
                             "answer": " ".join(words[i] for i in answer_word_ids),
-                            "start": answer_word_ids[0],
-                            "end": answer_word_ids[-1],
+                            "words": answer_word_ids,
+                            # TODO: This is slightly inaccurate, since it is only the first page
                             "page": output["page"],
                         }
                     )

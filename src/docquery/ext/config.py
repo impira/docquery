@@ -16,8 +16,8 @@
 from transformers import LayoutLMConfig
 
 
-class LayoutLMDocQueryConfig(LayoutLMConfig):
-    model_type = "layoutlm-docquery"
+class LayoutLMTokenClassifierConfig(LayoutLMConfig):
+    model_type = "layoutlm-tc"
 
     def __init__(
         self,
