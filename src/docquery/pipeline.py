@@ -43,7 +43,7 @@ PIPELINE_REGISTRY.register_pipeline(
 )
 
 
-def get_pipeline(checkpoint=None, revision=None, device=None):
+def get_pipeline(checkpoint=None, revision=None, device=None, **pipeline_kwargs):
     if checkpoint is None:
         checkpoint = CHECKPOINT
 
@@ -56,9 +56,11 @@ def get_pipeline(checkpoint=None, revision=None, device=None):
     kwargs = {}
     if checkpoint == CHECKPOINT:
         config = LayoutLMConfig.from_pretrained(checkpoint, revision=revision)
-        kwargs["add_prefix_space"] = True
     else:
         config = AutoConfig.from_pretrained(checkpoint, revision=revision)
+
+    if config.model_type in ("layoutlm", "layoutlm-docquery"):
+        kwargs["add_prefix_space"] = True
 
     tokenizer = AutoTokenizer.from_pretrained(
         checkpoint,
@@ -72,9 +74,10 @@ def get_pipeline(checkpoint=None, revision=None, device=None):
     else:
         model = checkpoint
 
-    pipeline_kwargs = {}
     if config.model_type == "vision-encoder-decoder":
         pipeline_kwargs["feature_extractor"] = model
+    elif config.model_type == "layoutlm-docquery":
+        pipeline_kwargs["max_answer_len"] = 1000  # Let the token classifier filter things out
 
     return pipeline(
         "document-question-answering",

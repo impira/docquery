@@ -9,6 +9,7 @@ from transformers.models.vision_encoder_decoder import VisionEncoderDecoderModel
 from transformers.pipelines.base import PIPELINE_INIT_ARGS, ChunkPipeline
 from transformers.utils import add_end_docstrings, is_torch_available, logging
 
+from .itertools import unique_everseen
 from .qa_helpers import TESSERACT_LOADED, VISION_LOADED, Image, load_image, pytesseract, select_starts_ends
 
 
@@ -403,7 +404,6 @@ class DocumentQuestionAnsweringPipeline(ChunkPipeline):
         min_null_score = 1000000  # large and positive
         answers = []
 
-        word_start = 0
         for output in model_outputs:
             words = output["words"]
 
@@ -417,17 +417,31 @@ class DocumentQuestionAnsweringPipeline(ChunkPipeline):
                 handle_impossible_answer,
                 max_answer_len,
             )
-
             word_ids = output["word_ids"]
             for s, e, score in zip(starts, ends, scores):
-                word_start, word_end = word_ids[s], word_ids[e]
-                if word_start is not None and word_end is not None:
+                if "token_logits" in output:
+                    predicted_token_classes = (
+                        output["token_logits"][
+                            0,
+                            s : e + 1,
+                        ]
+                        .argmax(axis=1)
+                        .cpu()
+                        .numpy()
+                    )
+                    assert np.setdiff1d(predicted_token_classes, [0, 1]).shape == (0,)
+                    token_indices = np.flatnonzero(predicted_token_classes) + s
+                else:
+                    token_indices = range(s, e + 1)
+
+                answer_word_ids = list(unique_everseen([word_ids[i] for i in token_indices]))
+                if len(answer_word_ids) > 0 and answer_word_ids[0] is not None and answer_word_ids[-1] is not None:
                     answers.append(
                         {
                             "score": float(score),
-                            "answer": " ".join(words[word_start : word_end + 1]),
-                            "start": word_start,
-                            "end": word_end,
+                            "answer": " ".join(words[i] for i in answer_word_ids),
+                            "start": answer_word_ids[0],
+                            "end": answer_word_ids[-1],
                             "page": output["page"],
                         }
                     )
