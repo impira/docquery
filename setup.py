@@ -30,6 +30,7 @@ extras_require = {
         "flake8-isort",
         "isort==5.10.1",
         "pre-commit",
+        "pytest",
         "twine",
     ],
     "donut": [

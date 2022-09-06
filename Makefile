@@ -32,9 +32,12 @@ ${VENV_PRE_COMMIT}: ${VENV_PYTHON_PACKAGES}
 	bash -c 'source venv/bin/activate && pre-commit install'
 	@touch $@
 
-.PHONY: develop fixup
+.PHONY: develop fixup test
 develop: ${VENV_PRE_COMMIT}
 	@echo 'Run "source venv/bin/activate" to enter development mode'
 
 fixup:
 	pre-commit run --all-files
+
+test:
+	python -m pytest -s -v ./tests/
