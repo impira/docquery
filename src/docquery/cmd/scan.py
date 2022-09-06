@@ -61,8 +61,10 @@ def main(args):
             try:
                 response = nlp(question=q, **d.context)
                 if isinstance(response, list):
-                    response = response[0]
+                    response = response[0] if len(response) > 0 else None
             except Exception:
                 log.error(f"Failed while processing {str(p)} on question {q}!")
                 raise
-            print(f"{str(p):<{max_fname_len}} {q:<{max_question_len}}: {response['answer']}")
+
+            answer = response["answer"] if response is not None else "NULL"
+            print(f"{str(p):<{max_fname_len}} {q:<{max_question_len}}: {answer}")
