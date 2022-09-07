@@ -12,6 +12,7 @@ from docquery.pipeline import get_pipeline
 
 CHECKPOINTS = {
     "LayoutLMv1": "impira/layoutlm-document-qa",
+    "LayoutLMv1-Invoices": "impira/layoutlm-invoices",
     "Donut": "naver-clova-ix/donut-base-finetuned-docvqa",
 }
 
@@ -36,13 +37,8 @@ EXAMPLES = [
             {
                 "question": "What is the purchase amount?",
                 "answers": {
-                    "LayoutLMv1": {
-                        "score": 0.9999,
-                        "answer": "$1,000,000,000",
-                        "start": 97,
-                        "end": 97,
-                        "page": 0,
-                    },
+                    "LayoutLMv1": {"score": 0.9999, "answer": "$1,000,000,000", "word_ids": [97], "page": 0},
+                    "LayoutLMv1-Invoices": {"score": 0.9997, "answer": "$1,000,000,000", "word_ids": [97], "page": 0},
                     "Donut": {"answer": "$1,0000,000,00"},
                 },
             }
@@ -55,7 +51,8 @@ EXAMPLES = [
             {
                 "question": "What is the invoice number?",
                 "answers": {
-                    "LayoutLMv1": {"score": 0.9997, "answer": "us-001", "start": 15, "end": 15, "page": 0},
+                    "LayoutLMv1": {"score": 0.9997, "answer": "us-001", "word_ids": [15], "page": 0},
+                    "LayoutLMv1-Invoices": {"score": 0.9999, "answer": "us-001", "word_ids": [15], "page": 0},
                     "Donut": {"answer": "us-001"},
                 },
             }
@@ -68,13 +65,8 @@ EXAMPLES = [
             {
                 "question": "What are net sales for 2020?",
                 "answers": {
-                    "LayoutLMv1": {
-                        "score": 0.9429,
-                        "answer": "$ 3,750\n",
-                        "start": 15,
-                        "end": 16,
-                        "page": 0,
-                    },
+                    "LayoutLMv1": {"score": 0.9429, "answer": "$ 3,750\n", "word_ids": [15, 16], "page": 0},
+                    "LayoutLMv1-Invoices": {"score": 0.9956, "answer": "$ 3,750\n", "word_ids": [15, 16], "page": 0},
                     "Donut": {"answer": "$ 3,750"},
                 },
             }

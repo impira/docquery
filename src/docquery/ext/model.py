@@ -1,26 +1,33 @@
-# NOTE: This code is currently under review for inclusion in the main
-# huggingface/transformers repository:
-# https://github.com/huggingface/transformers/pull/18407
-""" PyTorch LayoutLM model."""
-
-
-import math
+import copy
+from dataclasses import dataclass
 from typing import Optional, Tuple, Union
 
 import torch
 from torch import nn
-from torch.nn import CrossEntropyLoss
-from transformers.modeling_outputs import QuestionAnsweringModelOutput
-from transformers.models.layoutlm import LayoutLMModel, LayoutLMPreTrainedModel
+from transformers import LayoutLMModel, LayoutLMPreTrainedModel
+from transformers.modeling_outputs import QuestionAnsweringModelOutput as QuestionAnsweringModelOutputBase
+
+from .config import LayoutLMConfig, LayoutLMTokenClassifierConfig
 
 
-class LayoutLMForQuestionAnswering(LayoutLMPreTrainedModel):
+@dataclass
+class QuestionAnsweringModelOutput(QuestionAnsweringModelOutputBase):
+    token_logits: Optional[torch.FloatTensor] = None
+
+
+class LayoutLMTokenClassifierForQuestionAnswering(LayoutLMPreTrainedModel):
+    config_class = LayoutLMTokenClassifierConfig
+
     def __init__(self, config, has_visual_segment_embedding=True):
         super().__init__(config)
         self.num_labels = config.num_labels
 
         self.layoutlm = LayoutLMModel(config)
         self.qa_outputs = nn.Linear(config.hidden_size, config.num_labels)
+
+        self.token_classifier_head = None
+        if self.config.token_classification:
+            self.token_classifier_head = nn.Linear(config.hidden_size, 2)
 
         # Initialize weights and apply final processing
         self.post_init()
@@ -39,6 +46,7 @@ class LayoutLMForQuestionAnswering(LayoutLMPreTrainedModel):
         inputs_embeds: Optional[torch.FloatTensor] = None,
         start_positions: Optional[torch.LongTensor] = None,
         end_positions: Optional[torch.LongTensor] = None,
+        token_labels: Optional[torch.LongTensor] = None,
         output_attentions: Optional[bool] = None,
         output_hidden_states: Optional[bool] = None,
         return_dict: Optional[bool] = None,
@@ -109,7 +117,14 @@ class LayoutLMForQuestionAnswering(LayoutLMPreTrainedModel):
             return_dict=return_dict,
         )
 
-        sequence_output = outputs[0]
+        if input_ids is not None:
+            input_shape = input_ids.size()
+        else:
+            input_shape = inputs_embeds.size()[:-1]
+
+        seq_length = input_shape[1]
+        # only take the text part of the output representations
+        sequence_output = outputs[0][:, :seq_length]
 
         logits = self.qa_outputs(sequence_output)
         start_logits, end_logits = logits.split(1, dim=-1)
@@ -128,19 +143,55 @@ class LayoutLMForQuestionAnswering(LayoutLMPreTrainedModel):
             start_positions = start_positions.clamp(0, ignored_index)
             end_positions = end_positions.clamp(0, ignored_index)
 
-            loss_fct = CrossEntropyLoss(ignore_index=ignored_index)
+            loss_fct = nn.CrossEntropyLoss(ignore_index=ignored_index)
             start_loss = loss_fct(start_logits, start_positions)
             end_loss = loss_fct(end_logits, end_positions)
             total_loss = (start_loss + end_loss) / 2
 
+        token_logits = None
+        if self.config.token_classification:
+            token_logits = self.token_classifier_head(sequence_output)
+
+            if token_labels is not None:
+                # Loss fn expects logits to be of shape (batch_size, num_labels, 512), but model
+                # outputs (batch_size, 512, num_labels), so we need to move the dimensions around
+                # Ref: https://pytorch.org/docs/stable/generated/torch.nn.CrossEntropyLoss.html
+                token_logits_reshaped = torch.movedim(token_logits, source=token_logits.ndim - 1, destination=1)
+                token_loss = nn.CrossEntropyLoss(reduction=self.config.token_classifier_reduction)(
+                    token_logits_reshaped, token_labels
+                )
+
+                total_loss += self.config.token_classifier_constant * token_loss
+
         if not return_dict:
-            output = (start_logits, end_logits) + outputs[2:]
-            return ((total_loss,) + output) if total_loss is not None else output
+            output = (start_logits, end_logits)
+            if self.token_classification:
+                output = output + (token_logits,)
+
+            output = output + outputs[2:]
+
+            if total_loss is not None:
+                output = (total_loss,) + output
+
+            return output
 
         return QuestionAnsweringModelOutput(
             loss=total_loss,
             start_logits=start_logits,
             end_logits=end_logits,
+            token_logits=token_logits,
             hidden_states=outputs.hidden_states,
             attentions=outputs.attentions,
         )
+
+
+# This is a thin wrapper around LayoutLMTokenClassifierForQuestionAnswering that simply instantiates
+# a default value for token_classification. Once we update transformers to be a version that
+# includes the upstremed LayoutLMForQuestionAnswering class, we can remove this.
+class LayoutLMForQuestionAnswering(LayoutLMTokenClassifierForQuestionAnswering):
+    config_class = LayoutLMConfig
+
+    def __init__(self, config, **kwargs):
+        config = copy.deepcopy(config)
+        config.token_classification = False
+        super().__init__(config, **kwargs)
