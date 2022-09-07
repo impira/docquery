@@ -2,7 +2,6 @@ import os
 
 import setuptools
 
-
 dir_name = os.path.abspath(os.path.dirname(__file__))
 
 version_contents = {}
@@ -20,6 +19,7 @@ install_requires = [
     "pydantic",
     "pytesseract",  # TODO: Test what happens if the host machine does not have tesseract installed
     "requests",
+    "easyocr",
     "transformers >= 4.21",
 ]
 extras_require = {
