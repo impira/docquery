@@ -58,9 +58,12 @@ class LayoutLMTokenClassifierConfig(LayoutLMConfig):
         token_classification (`bool, *optional*, defaults to False):
             Whether to include an additional token classification head in question answering
         token_classifier_reduction (`str`, *optional*, defaults to "mean")
-            # TODO
+            Specifies the reduction to apply to the output of the cross entropy loss for the token classifier head during
+            training. Options are: 'none' | 'mean' | 'sum'. 'none': no reduction will be applied, 'mean': the weighted
+            mean of the output is taken, 'sum': the output will be summed.
         token_classifier_constant (`float`, *optional*, defaults to 1.0)
-            # TODO
+            Coefficient for the token classifier head's contribution to the total loss. A larger value means that the model
+            will prioritize learning the token classifier head during training.
     Examples:
     ```python
     >>> from transformers import LayoutLMModel, LayoutLMConfig
