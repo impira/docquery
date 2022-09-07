@@ -79,7 +79,9 @@ def get_pipeline(checkpoint=None, revision=None, device=None, **pipeline_kwargs)
     if config.model_type == "vision-encoder-decoder":
         pipeline_kwargs["feature_extractor"] = model
     elif config.model_type == "layoutlm-tc":
-        pipeline_kwargs["max_answer_len"] = 1000  # Let the token classifier filter things out
+        # Disable limiting the answer in `decode_spans` by setting `max_answer_len` to a value
+        # greater than or equal to the maximum number of tokens.
+        pipeline_kwargs["max_answer_len"] = tokenizer.model_max_length
 
     return pipeline(
         "document-question-answering",
