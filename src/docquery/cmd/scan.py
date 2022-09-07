@@ -43,7 +43,7 @@ def main(args):
     docs = []
     for p in paths:
         try:
-            docs.append((p, load_document(str(p), ocr_reader_name=args.ocr)))
+            docs.append((p, load_document(str(p), ocr_reader=args.ocr)))
             log.info(f"Loading {p}")
         except UnsupportedDocument as e:
             log.warning(f"Cannot load {p}: {e}. Skipping...")
