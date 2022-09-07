@@ -146,7 +146,7 @@ class DummyOCRReader(OCRReader):
         self.reader = None
 
     def apply_ocr(self, image: "Image.Image") -> Tuple[(List[str], List[List[int]])]:
-        raise NoOCRReaderFound("Unable to find any OCR engine and OCR extraction was requested")
+        raise NoOCRReaderFound("Unable to find any OCR reader and OCR extraction was requested")
 
     @staticmethod
     def _check_if_available():

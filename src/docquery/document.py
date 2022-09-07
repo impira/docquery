@@ -81,43 +81,13 @@ class Document(metaclass=abc.ABCMeta):
         raise NotImplementedError
 
     @staticmethod
-    def _normalize_box(box: List[int], width: int, height: int) -> List[int]:
-        """
-        box is [x1,y1,x2,y2] where x1,y1 are the top left corner of box and x2,y2 is the bottom right corner
-        This function scales the distance between boxes to be on a fixed scale
-        It is derived from the preprocessing code for LayoutLM
-        """
-
-        return [
-            max(min(c, 1000), 0)
-            for c in [
-                int(1000 * (box[0] / width)),
-                int(1000 * (box[1] / height)),
-                int(1000 * (box[2] / width)),
-                int(1000 * (box[3] / height)),
-            ]
-        ]
-
-    @staticmethod
-    def _normalize_boxes(
-        words: List[str], boxes: List[List[int]], width: int, height: int
-    ) -> Tuple[List[str], List[List[int]]]:
-        # finally, normalize the bounding boxes
-        normalized_boxes = [Document._normalize_box(box, width, height) for box in boxes]
-
-        return words, normalized_boxes
-
-    @staticmethod
-    def _make_word_boxes(words: List[str], normalized_boxes: List[List[int]]):
-        return [x for x in zip(words, normalized_boxes)]
-
-    @staticmethod
     def _generate_document_output(
         images: List["Image.Image"],
         words_by_page: List[List[str]],
         boxes_by_page: List[List[List[int]]],
         dimensions_by_page: List[Tuple[int, int]],
     ) -> Dict[str, List[Tuple["Image.Image", List[Any]]]]:
+
         # pages_dimensions (width, height)
         assert len(images) == len(dimensions_by_page)
         assert len(images) == len(words_by_page)
@@ -125,12 +95,29 @@ class Document(metaclass=abc.ABCMeta):
         processed_pages = []
         for image, words, boxes, dimensions in zip(images, words_by_page, boxes_by_page, dimensions_by_page):
             width, height = dimensions
-            words, normalized_boxes = Document._normalize_boxes(words, boxes, width, height)
+
+            """
+            box is [x1,y1,x2,y2] where x1,y1 are the top left corner of box and x2,y2 is the bottom right corner
+            This function scales the distance between boxes to be on a fixed scale
+            It is derived from the preprocessing code for LayoutLM
+            """
+            normalized_boxes = [
+                [
+                    max(min(c, 1000), 0)
+                    for c in [
+                        int(1000 * (box[0] / width)),
+                        int(1000 * (box[1] / height)),
+                        int(1000 * (box[2] / width)),
+                        int(1000 * (box[3] / height)),
+                    ]
+                ]
+                for box in boxes
+            ]
             assert len(words) == len(normalized_boxes), "Not as many words as there are bounding boxes"
-            word_boxes = Document._make_word_boxes(words, normalized_boxes)
+            word_boxes = [x for x in zip(words, normalized_boxes)]
             processed_pages.append((image, word_boxes))
 
-            return {"image": processed_pages}
+        return {"image": processed_pages}
 
 
 class PDFDocument(Document):
