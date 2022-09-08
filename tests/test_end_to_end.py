@@ -1,4 +1,3 @@
-from pathlib import Path
 from typing import Dict, List
 
 import pytest
@@ -79,7 +78,7 @@ EXAMPLES = [
 @pytest.mark.parametrize("model", CHECKPOINTS.keys())
 def test_impira_dataset(example, model):
     document = load_document(example.path)
-    pipe = pipeline("document-question-answering", checkpoint=CHECKPOINTS[model])
+    pipe = pipeline("document-question-answering", model=CHECKPOINTS[model])
     for qa in example.qa_pairs:
         resp = pipe(question=qa.question, **document.context, top_k=1)
         assert nested_simplify(resp, decimals=4) == qa.answers[model]
@@ -88,7 +87,7 @@ def test_impira_dataset(example, model):
 def test_run_with_choosen_OCR_str():
     example = EXAMPLES[0]
     document = load_document(example.path, "tesseract")
-    pipe = pipeline("document-question-answering", checkpoint=CHECKPOINTS["LayoutLMv1"])
+    pipe = pipeline("document-question-answering", model=CHECKPOINTS["LayoutLMv1"])
     for qa in example.qa_pairs:
         resp = pipe(question=qa.question, **document.context, top_k=1)
         assert nested_simplify(resp, decimals=4) == qa.answers["LayoutLMv1"]
@@ -98,7 +97,7 @@ def test_run_with_choosen_OCR_instance():
     example = EXAMPLES[0]
     reader = TesseractReader()
     document = load_document(example.path, reader)
-    pipe = pipeline(checkpoint=CHECKPOINTS["LayoutLMv1"])
+    pipe = pipeline("document-question-answering", model=CHECKPOINTS["LayoutLMv1"])
     for qa in example.qa_pairs:
         resp = pipe(question=qa.question, **document.context, top_k=1)
         assert nested_simplify(resp, decimals=4) == qa.answers["LayoutLMv1"]
