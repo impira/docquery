@@ -82,7 +82,7 @@ def test_impira_dataset(example, model):
     pipeline = get_pipeline(checkpoint=CHECKPOINTS[model])
     for qa in example.qa_pairs:
         resp = pipeline(question=qa.question, **document.context, top_k=1)
-        assert nested_simplify(resp, decimals=3) == qa.answers[model]
+        assert nested_simplify(resp, decimals=4) == qa.answers[model]
 
 
 def test_run_with_choosen_OCR_str():
@@ -91,7 +91,7 @@ def test_run_with_choosen_OCR_str():
     pipeline = get_pipeline(checkpoint=CHECKPOINTS["LayoutLMv1"])
     for qa in example.qa_pairs:
         resp = pipeline(question=qa.question, **document.context, top_k=1)
-        assert nested_simplify(resp, decimals=3) == qa.answers["LayoutLMv1"]
+        assert nested_simplify(resp, decimals=4) == qa.answers["LayoutLMv1"]
 
 
 def test_run_with_choosen_OCR_instance():
@@ -101,4 +101,4 @@ def test_run_with_choosen_OCR_instance():
     pipeline = get_pipeline(checkpoint=CHECKPOINTS["LayoutLMv1"])
     for qa in example.qa_pairs:
         resp = pipeline(question=qa.question, **document.context, top_k=1)
-        assert nested_simplify(resp, decimals=3) == qa.answers["LayoutLMv1"]
+        assert nested_simplify(resp, decimals=4) == qa.answers["LayoutLMv1"]
