@@ -6,13 +6,16 @@ from transformers.models.auto.auto_factory import _BaseAutoModelClass, _LazyAuto
 from transformers.models.auto.configuration_auto import CONFIG_MAPPING_NAMES
 from transformers.pipelines import PIPELINE_REGISTRY
 
+from .config import get_logger
 from .ext.config import LayoutLMConfig, LayoutLMTokenClassifierConfig
 from .ext.model import LayoutLMForQuestionAnswering, LayoutLMTokenClassifierForQuestionAnswering
 from .ext.pipeline import DocumentQuestionAnsweringPipeline
 
 
+log = get_logger("pipeline")
+
 CHECKPOINT = "impira/layoutlm-document-qa"
-REVISION = "3a93017fc2d200d68d0c2cc0fa62eb8d50314605"
+REVISION = "ff904df"
 
 MODEL_FOR_DOCUMENT_QUESTION_ANSWERING_MAPPING_NAMES = OrderedDict(
     [
@@ -45,7 +48,17 @@ PIPELINE_REGISTRY.register_pipeline(
 )
 
 
-def get_pipeline(checkpoint=None, revision=None, device=None, **pipeline_kwargs):
+def get_pipeline(*args, **kwargs):
+    log.warning(
+        "get_pipeline() is deprecated in favor of get_dqa_pipeline(). This function will be removed in a future release"
+    )
+    return get_qa_pipeline(*args, **kwargs)
+
+
+# NOTE: Eventually this function will be removed in favor of instructing users to call pipeline() directly.
+# However, until LayoutLMForQuestionAnswering is available through HuggingFace directly (and installed in
+# an auto class), we'll need to wrap it like this.
+def get_qa_pipeline(checkpoint=None, revision=None, device=None, **pipeline_kwargs):
     if checkpoint is None:
         checkpoint = CHECKPOINT
 
@@ -60,9 +73,6 @@ def get_pipeline(checkpoint=None, revision=None, device=None, **pipeline_kwargs)
         config = LayoutLMConfig.from_pretrained(checkpoint, revision=revision)
     else:
         config = AutoConfig.from_pretrained(checkpoint, revision=revision)
-
-    if config.model_type in ("layoutlm", "layoutlm-tc"):
-        kwargs["add_prefix_space"] = True
 
     tokenizer = AutoTokenizer.from_pretrained(
         checkpoint,
