@@ -397,10 +397,18 @@ class DocumentQuestionAnsweringPipeline(ChunkPipeline):
         return ret
 
     def postprocess_extractive_qa(
-        self, model_outputs, top_k=1, handle_impossible_answer=False, max_answer_len=15, **kwargs
+        self, model_outputs, top_k=1, handle_impossible_answer=False, max_answer_len=None, **kwargs
     ):
         min_null_score = 1000000  # large and positive
         answers = []
+
+        if max_answer_len is None:
+            if hasattr(self.model.config, "token_classification") and self.model.config.token_classification:
+                # If this model has token classification, then use a much longer max answer length and
+                # let the classifier remove things
+                max_answer_len = 1000
+            else:
+                max_answer_len = 15
 
         for output in model_outputs:
             words = output["words"]
