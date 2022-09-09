@@ -1,6 +1,6 @@
 <div align="center">
 
-# DocQuery: Document Query Engine Powered by NLP
+# DocQuery: Document Query Engine Powered by Large Language Models
 
 [![Demo](https://img.shields.io/badge/Demo-Gradio-brightgreen)](https://huggingface.co/spaces/impira/docquery)
 [![Demo](https://img.shields.io/badge/Demo-Colab-orange)](https://github.com/impira/docquery/blob/main/docquery_example.ipynb)
@@ -11,7 +11,7 @@
 </div>
 
 DocQuery is a library and command-line tool that makes it easy to analyze semi-structured and unstructured documents (PDFs, scanned
-images, etc.) using advanced natural language processing (NLP). You simply point DocQuery at one or more documents and specify a
+images, etc.) using large language models (LLMs). You simply point DocQuery at one or more documents and specify a
 question you want to ask. DocQuery is created by the team at [Impira](https://impira.com?utm_source=github&utm_medium=referral&utm_campaign=docquery).
 
 ## Quickstart (CLI)
@@ -54,7 +54,7 @@ to feed into the pipeline.
 
 ```python
 >>> from docquery import document, pipeline
->>> p = pipeline.get_pipeline()
+>>> p = pipeline('document-question'answering')
 >>> doc = document.load_document("/path/to/document.pdf")
 >>> for q in ["What is the invoice number?", "What is the invoice total?"]:
 ...     print(q, p(question=q, **doc.context))
@@ -63,8 +63,9 @@ to feed into the pipeline.
 ## Use cases
 
 DocQuery excels at a number of use cases involving structured, semi-structured, or unstructured documents. You can ask questions about
-invoices, contracts, forms, emails, letters, receipts, and many more. We will continue evolving the model, offer more modeling options,
-and expanding the set of supported documents. We welcome feedback, requests, and of course contributions to help achieve this vision.
+invoices, contracts, forms, emails, letters, receipts, and many more. You can also classify documents. We will continue evolving the model,
+offer more modeling options, and expanding the set of supported documents. We welcome feedback, requests, and of course contributions to
+help achieve this vision.
 
 ## How it works
 
@@ -82,7 +83,7 @@ DocQuery is intended to have a small install footprint and be simple to work wit
 - Support for images and PDFs. Currently DocQuery supports images and PDFs, with or without embedded text. It does not support word documents, emails, spreadsheets, etc.
 - Scalar text outputs. DocQuery only produces text outputs (answers). It does not support richer scalar types (i.e. it treats numbers and dates as strings) or tables.
 
-## Using Donut
+## Using Donut 🍩
 
 If you'd like to test `docquery` with [Donut](https://arxiv.org/abs/2111.15664), you must install a special version of transformers:
 
@@ -94,6 +95,21 @@ since it has not yet been released in a tagged release. You can then run
 
 ```bash
 docquery scan "What is the effective date?" /path/to/contracts/folder --checkpoint 'naver-clova-ix/donut-base-finetuned-docvqa'
+```
+
+## Classifying documents
+
+To classify documents, you simply add the `--classify` argument to `scan`. You can specify any [image classification](https://huggingface.co/models?pipeline_tag=image-classification&sort=downloads)
+model on Hugging Face's hub. By default, the classification pipeline uses [Donut](https://huggingface.co/spaces/nielsr/donut-rvlcdip) (which requires
+the installation instructions above):
+
+```bash
+
+# Classify documents
+docquery scan --classify  /path/to/contracts/folder --checkpoint 'naver-clova-ix/donut-base-finetuned-docvqa'
+
+# Classify documents and ask a question too
+docquery scan --classify "What is the effective date?" /path/to/contracts/folder --checkpoint 'naver-clova-ix/donut-base-finetuned-docvqa'
 ```
 
 ## Where to go from here
