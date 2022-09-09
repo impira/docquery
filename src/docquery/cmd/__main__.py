@@ -10,7 +10,7 @@ import textwrap
 
 import transformers
 
-from ..pipeline import CHECKPOINT
+from ..transformers_patch import PIPELINE_DEFAULTS
 
 
 _module_not_found_error = None
@@ -41,7 +41,9 @@ def main(args=None):
     parent_parser = argparse.ArgumentParser(add_help=False)
     parent_parser.add_argument("--verbose", "-v", default=False, action="store_true")
     parent_parser.add_argument(
-        "--checkpoint", default=CHECKPOINT, help=f"A custom model checkpoint to use (other than {CHECKPOINT})"
+        "--checkpoint",
+        default=None,
+        help=f"A custom model checkpoint to use (other than {PIPELINE_DEFAULTS['document-question-answering']})",
     )
 
     parser = argparse.ArgumentParser(description="docquery is a cli tool to work with documents.")
