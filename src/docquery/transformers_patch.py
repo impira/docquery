@@ -5,22 +5,38 @@
 from collections import OrderedDict
 
 import torch
-from transformers import AutoConfig, AutoModel, AutoTokenizer
+from transformers import (
+    AutoConfig,
+    AutoModel,
+    AutoModelForImageClassification,
+    AutoTokenizer,
+    VisionEncoderDecoderConfig,
+    VisionEncoderDecoderModel,
+)
 from transformers import pipeline as transformers_pipeline
 from transformers.models.auto.auto_factory import _BaseAutoModelClass, _LazyAutoMapping
 from transformers.models.auto.configuration_auto import CONFIG_MAPPING_NAMES
 from transformers.pipelines import PIPELINE_REGISTRY
 
-from .config import get_logger
 from .ext.config import LayoutLMConfig, LayoutLMTokenClassifierConfig
 from .ext.model import LayoutLMForQuestionAnswering, LayoutLMTokenClassifierForQuestionAnswering
-from .ext.pipeline import DocumentQuestionAnsweringPipeline
+from .ext.pipeline_document_question_answering import DocumentQuestionAnsweringPipeline
+from .ext.pipeline_image_classification import ImageClassificationPipeline
 
 
-log = get_logger("pipeline")
+PIPELINE_DEFAULTS = {
+    "document-question-answering": "impira/layoutlm-document-qa",
+    "image-classification": "naver-clova-ix/donut-base-finetuned-rvlcdip",
+}
 
-CHECKPOINT = "impira/layoutlm-document-qa"
-REVISION = "ff904df"
+# These revisions are pinned so that the "default" experience in DocQuery is both fast (does not
+# need to check network for updates) and versioned (we can be sure that the model changes
+# result in new versions of DocQuery). This may eventually change.
+DEFAULT_REVISIONS = {
+    "impira/layoutlm-document-qa": "ff904df",
+    "impira/layoutlm-invoices": "f3db68b",
+    "naver-clova-ix/donut-base-finetuned-rvlcdip": "5998e9f",
+}
 
 MODEL_FOR_DOCUMENT_QUESTION_ANSWERING_MAPPING_NAMES = OrderedDict(
     [
@@ -52,24 +68,32 @@ PIPELINE_REGISTRY.register_pipeline(
     pt_model=AutoModelForDocumentQuestionAnswering,
 )
 
+# The Donut model used for image classification defined here: https://huggingface.co/naver-clova-ix/donut-base-finetuned-rvlcdip
+# declares itself a VisionEncoderDecoderModel, not a DonutModel, so we have to register the former in the Auto Class. We may want
+# to fork this model and setup a different configuration that specifies Donut
+AutoModelForImageClassification.register(VisionEncoderDecoderConfig, VisionEncoderDecoderModel)
+
+PIPELINE_REGISTRY.register_pipeline(
+    "image-classification",
+    pipeline_class=ImageClassificationPipeline,
+    pt_model=AutoModelForImageClassification,
+)
+
 
 def pipeline(task=None, model=None, revision=None, device=None, tokenizer=None, **pipeline_kwargs):
+    if model is None and task is not None:
+        model = PIPELINE_DEFAULTS.get(task)
+
+    if revision is None and model is not None:
+        revision = DEFAULT_REVISIONS.get(model)
+
     if task == "document-question-answering":
-        if model is None:
-            model = CHECKPOINT
-
-        if model == CHECKPOINT and revision is None:
-            # This revision is pinned so that the "default" experience in DocQuery is both fast (does not
-            # need to check network for updates) and versioned (we can be sure that the model changes
-            # result in new versions of DocQuery). This may eventually change.
-            revision = REVISION
-
         # We need to explicitly check for the impira/layoutlm-document-qa model because of challenges with
         # registering an existing model "flavor" (layoutlm) within transformers after the fact. There may
         # be a clever way to get around this. Either way, we should be able to remove it once
         # https://github.com/huggingface/transformers/commit/5c4c869014f5839d04c1fd28133045df0c91fd84
         # is officially released.
-        if model == CHECKPOINT:
+        if model == "impira/layoutlm-document-qa":
             config = LayoutLMConfig.from_pretrained(model, revision=revision)
         else:
             config = AutoConfig.from_pretrained(model, revision=revision)
@@ -81,7 +105,7 @@ def pipeline(task=None, model=None, revision=None, device=None, tokenizer=None, 
                 config=config,
             )
 
-        if model == CHECKPOINT:
+        if model == "impira/layoutlm-document-qa":
             model = LayoutLMForQuestionAnswering.from_pretrained(model, revision=revision)
 
         if config.model_type == "vision-encoder-decoder":
