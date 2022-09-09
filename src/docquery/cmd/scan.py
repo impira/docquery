@@ -1,10 +1,10 @@
 import os
 import pathlib
 
+from .. import pipeline
 from ..config import get_logger
 from ..document import UnsupportedDocument, load_document
 from ..ocr_reader import OCR_MAPPING
-from ..pipeline import get_pipeline
 
 
 log = get_logger("scan")
@@ -49,7 +49,7 @@ def main(args):
             log.warning(f"Cannot load {p}: {e}. Skipping...")
 
     log.info("Done loading files. Loading pipeline...")
-    nlp = get_pipeline(args.checkpoint)
+    nlp = pipeline("document-question-answering", model=args.checkpoint)
     log.info("Ready to start evaluating!")
 
     max_fname_len = max(len(str(p)) for (p, d) in docs)
