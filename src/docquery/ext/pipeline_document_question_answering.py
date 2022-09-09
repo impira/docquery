@@ -67,6 +67,7 @@ def apply_tesseract(image: "Image.Image", lang: Optional[str], tesseract_config:
 
 
 ImageOrName = Union["Image.Image", str]
+DEFAULT_MAX_ANSWER_LENGTH = 15
 
 
 @add_end_docstrings(PIPELINE_INIT_ARGS)
@@ -406,9 +407,9 @@ class DocumentQuestionAnsweringPipeline(ChunkPipeline):
             if hasattr(self.model.config, "token_classification") and self.model.config.token_classification:
                 # If this model has token classification, then use a much longer max answer length and
                 # let the classifier remove things
-                max_answer_len = 1000
+                max_answer_len = self.tokenizer.model_max_length
             else:
-                max_answer_len = 15
+                max_answer_len = DEFAULT_MAX_ANSWER_LENGTH
 
         for output in model_outputs:
             words = output["words"]

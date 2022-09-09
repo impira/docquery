@@ -3,6 +3,7 @@
 # since libraries on pypi are not permitted to install specific git commits.
 
 from collections import OrderedDict
+from typing import Optional, Union
 
 import torch
 from transformers import (
@@ -10,6 +11,8 @@ from transformers import (
     AutoModel,
     AutoModelForImageClassification,
     AutoTokenizer,
+    PreTrainedTokenizer,
+    PreTrainedTokenizerFast,
     VisionEncoderDecoderConfig,
     VisionEncoderDecoderModel,
 )
@@ -80,7 +83,15 @@ PIPELINE_REGISTRY.register_pipeline(
 )
 
 
-def pipeline(task=None, model=None, revision=None, device=None, tokenizer=None, **pipeline_kwargs):
+def pipeline(
+    task: str = None,
+    model: Optional = None,
+    tokenizer: Optional[Union[str, PreTrainedTokenizer, PreTrainedTokenizerFast]] = None,
+    revision: Optional[str] = None,
+    device: Optional[Union[int, str, "torch.device"]] = None,
+    **pipeline_kwargs
+):
+
     if model is None and task is not None:
         model = PIPELINE_DEFAULTS.get(task)
 
