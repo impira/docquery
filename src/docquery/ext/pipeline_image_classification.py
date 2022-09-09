@@ -155,6 +155,7 @@ class ImageClassificationPipeline(Pipeline):
         if self.model_type == ModelType.VisionEncoderDecoder:
             model_inputs = {
                 "inputs": model_inputs["pixel_values"],
+                "max_length": self.model.decoder.config.max_position_embeddings,
                 "decoder_input_ids": self.tokenizer(
                     "<s_rvlcdip>",
                     add_special_tokens=False,
