@@ -87,31 +87,30 @@ def pipeline(task=None, model=None, revision=None, device=None, tokenizer=None, 
     if revision is None and model is not None:
         revision = DEFAULT_REVISIONS.get(model)
 
-    if task == "document-question-answering":
-        # We need to explicitly check for the impira/layoutlm-document-qa model because of challenges with
-        # registering an existing model "flavor" (layoutlm) within transformers after the fact. There may
-        # be a clever way to get around this. Either way, we should be able to remove it once
-        # https://github.com/huggingface/transformers/commit/5c4c869014f5839d04c1fd28133045df0c91fd84
-        # is officially released.
-        if model == "impira/layoutlm-document-qa":
-            config = LayoutLMConfig.from_pretrained(model, revision=revision)
-        else:
-            config = AutoConfig.from_pretrained(model, revision=revision)
+    # We need to explicitly check for the impira/layoutlm-document-qa model because of challenges with
+    # registering an existing model "flavor" (layoutlm) within transformers after the fact. There may
+    # be a clever way to get around this. Either way, we should be able to remove it once
+    # https://github.com/huggingface/transformers/commit/5c4c869014f5839d04c1fd28133045df0c91fd84
+    # is officially released.
+    if model == "impira/layoutlm-document-qa":
+        config = LayoutLMConfig.from_pretrained(model, revision=revision)
+    else:
+        config = AutoConfig.from_pretrained(model, revision=revision)
 
-        if tokenizer is None:
-            tokenizer = AutoTokenizer.from_pretrained(
-                model,
-                revision=revision,
-                config=config,
-            )
+    if tokenizer is None:
+        tokenizer = AutoTokenizer.from_pretrained(
+            model,
+            revision=revision,
+            config=config,
+        )
 
-        if model == "impira/layoutlm-document-qa":
-            model = LayoutLMForQuestionAnswering.from_pretrained(model, revision=revision)
+    if model == "impira/layoutlm-document-qa":
+        model = LayoutLMForQuestionAnswering.from_pretrained(model, revision=revision)
 
-        if config.model_type == "vision-encoder-decoder":
-            # This _should_ be a feature of transformers -- deriving the feature_extractor automatically --
-            # but is not at the time of writing, so we do it explicitly.
-            pipeline_kwargs["feature_extractor"] = model
+    if config.model_type == "vision-encoder-decoder":
+        # This _should_ be a feature of transformers -- deriving the feature_extractor automatically --
+        # but is not at the time of writing, so we do it explicitly.
+        pipeline_kwargs["feature_extractor"] = model
 
     if device is None:
         # This trick merely simplifies the device argument, so that cuda is used by default if it's
