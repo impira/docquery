@@ -37,6 +37,9 @@ extras_require = {
         "sentencepiece",
         "protobuf<=3.20.1",
     ],
+    "web": [
+        "selenium",
+    ]
     "cli": [],
 }
 extras_require["all"] = sorted({package for packages in extras_require.values() for package in packages})
