@@ -7,15 +7,9 @@ from typing import Any, Dict, List, Optional, Tuple, Union
 import requests
 from pydantic import validate_arguments
 
+from .ext.functools import cached_property
 from .ocr_reader import NoOCRReaderFound, OCRReader, get_ocr_reader
 from .web import get_webdriver
-
-
-try:
-    from functools import cached_property as cached_property
-except ImportError:
-    # for python 3.7 support fall back to just property
-    cached_property = property
 
 
 class UnsupportedDocument(Exception):
@@ -215,25 +209,40 @@ class WebDocument(Document):
         self.driver.get(self.url)
 
     @cached_property
-    def preview(self) -> "Image":
+    def page_screenshots(self):
         self.ensure_loaded()
-        return [Image.open(BytesIO(img)).convert("RGB") for img in self.driver.screenshots_png()]
+        return self.driver.screenshots_png()
+
+    @cached_property
+    def preview(self) -> "Image":
+        return [Image.open(BytesIO(img)).convert("RGB") for img in self.page_screenshots[1]]
 
     @cached_property
     def context(self) -> Dict[str, List[Tuple["Image.Image", List[Any]]]]:
         self.ensure_loaded()
         word_boxes = self.driver.find_word_boxes()
 
+        tops, _ = self.page_screenshots
+
+        n_pages = len(tops)
+        page = 0
+        offset = 0
+
         # TODO: This assumes everything fits in a page, which is likely a bad assumption
-        words = []
-        boxes = []
+        words = [[] for _ in range(n_pages)]
+        boxes = [[] for _ in range(n_pages)]
         for word_box in word_boxes["word_boxes"]:
-            words.append(word_box["text"])
             box = word_box["box"]
-            boxes.append((box["left"], box["top"], box["right"], box["bottom"]))
+
+            if page < len(tops) - 1 and box["top"] >= tops[page + 1]:
+                offset = tops[page]
+                page += 1
+
+            words[page].append(word_box["text"])
+            boxes[page].append((box["left"], box["top"] - offset, box["right"], box["bottom"] - offset))
 
         return self._generate_document_output(
-            self.preview, [words], [boxes], [(word_boxes["width"], word_boxes["height"])]
+            self.preview, words, boxes, [(word_boxes["vw"], word_boxes["vh"])] * n_pages
         )
 
 

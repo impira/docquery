@@ -4,12 +4,18 @@ function isVisible(obj) {
 }
 
 function findLeafNodes(node) {
+  /*
   if (!isVisible(node)) {
     return [];
   }
+  */
 
-  if (node.children.length == 0 && node.innerText.length > 0) {
-    return [node];
+  if (!node.children || node.children.length == 0) {
+    if (isVisible(node) && node.innerText && node.innerText.length > 0) {
+      return [node];
+    } else {
+      return [];
+    }
   }
 
   let children = [];
@@ -18,36 +24,50 @@ function findLeafNodes(node) {
   }
 
   const childrenText = children.reduce(
-    (a, x) => a + x.innerText.replace(/\s/g, ""),
+    (a, x) => a + (x.innerText || "").replace(/\s/g, ""),
     ""
   );
 
   // If the childrens' text contains all of the parent's text, return
   // the children. Otherwise, return the parent. This is unlikely the
   // most performant way to do this...
-  parentText = node.innerText.replace(/\s/g, "");
+  parentText = (node.innerText || "").replace(/\s/g, "");
 
-  if (childrenText == parentText) {
+  if (childrenText.length >= parentText.length) {
     return children;
-  } else {
+  } else if (isVisible(node)) {
     return [node];
+  } else {
+    return [];
   }
 }
 
-function computeBoundingBoxes(node) {
-  const vw = Math.max(
-    document.documentElement.clientWidth || 0,
-    window.innerWidth || 0
-  );
-  const vh = Math.max(
-    document.documentElement.clientHeight || 0,
-    window.innerHeight || 0
-  );
+function computeViewport() {
+  return {
+    vw: Math.max(
+      document.documentElement.clientWidth || 0,
+      window.innerWidth || 0
+    ),
+    vh: Math.max(
+      document.documentElement.clientHeight || 0,
+      window.innerHeight || 0
+    ),
 
+    // https://stackoverflow.com/questions/1145850/how-to-get-height-of-entire-document-with-javascript
+    dh: Math.max(
+      document.body.scrollHeight,
+      document.body.offsetHeight,
+      document.documentElement.clientHeight,
+      document.documentElement.scrollHeight,
+      document.documentElement.offsetHeight
+    ),
+  };
+}
+
+function computeBoundingBoxes(node) {
   const leafNodes = findLeafNodes(node);
   return {
-    width: vw,
-    height: vh,
+    ...computeViewport(),
     word_boxes: leafNodes.map((n) => ({
       text: n.innerText,
       box: n.getBoundingClientRect().toJSON(),

@@ -2,12 +2,15 @@ import os
 from pathlib import Path
 
 from .config import get_logger
+from .ext.functools import cached_property
 
 
 log = get_logger("web")
 
 try:
-    from chromedriver_py import binary_path  # This library allows you to download the driver for your version of chrome
+    from chromedriver_py import (  # This library allows you to download the driver for your version of chrome
+        binary_path,
+    )
     from selenium import webdriver
     from selenium.webdriver.chrome.options import Options
 
@@ -44,22 +47,44 @@ class WebDriver:
         self.driver.get("data:text/html;charset=utf-8," + html)
 
     def find_word_boxes(self):
-        global FIND_LEAF_NODES_JS
-        if FIND_LEAF_NODES_JS is None:
-            with open(dir_path / "find_leaf_nodes.js", "r") as f:
-                FIND_LEAF_NODES_JS = (
-                    f.read()
-                    + """
-                    return computeBoundingBoxes(document.body);
-                """
-                )
         # Assumes the driver has been pointed at the right website already
-        return self.driver.execute_script(FIND_LEAF_NODES_JS)
+        return self.driver.execute_script(
+            self.lib_js
+            + """
+                return computeBoundingBoxes(document.body);
+            """
+        )
 
+    # TODO: Handle horizontal scrolling
     def screenshots_png(self):
-        # TODO: I think this will only return the first "pane" as a screenshot. We should probably adjust
-        # the horizontal size and scroll vertically to generate multiple previews
-        return [self.driver.get_screenshot_as_png()]
+        tops = []
+        images = []
+        dims = self.driver.execute_script(
+            self.lib_js
+            + """
+            return computeViewport()
+        """
+        )
+
+        view_height = dims["vh"]
+        doc_height = dims["dh"]
+
+        self.driver.execute_script("window.scroll(0, 0)")
+        while True:
+            curr = self.driver.execute_script("return window.scrollY")
+            tops.append(curr)
+            images.append(self.driver.get_screenshot_as_png())
+            if curr + view_height < doc_height:
+                curr = self.driver.execute_script(f"window.scroll(0, {curr+view_height})")
+            else:
+                break
+
+        return tops, images
+
+    @cached_property
+    def lib_js(self):
+        with open(dir_path / "find_leaf_nodes.js", "r") as f:
+            return f.read()
 
 
 def get_webdriver():
