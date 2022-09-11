@@ -63,6 +63,7 @@ setuptools.setup(
         "Operating System :: OS Independent",
     ],
     package_dir={"": "src"},
+    package_data={"": ["find_leaf_nodes.js"]},
     packages=setuptools.find_packages(where="src"),
     python_requires=">=3.7.0",
     entry_points={
