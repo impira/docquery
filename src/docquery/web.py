@@ -37,6 +37,8 @@ class WebDriver:
         options = Options()
         options.headless = True
         options.add_argument("--window-size=1920,1200")
+        if os.geteuid() == 0:
+            options.add_argument("--no-sandbox")
 
         self.driver = webdriver.Chrome(options=options, executable_path=ChromeDriverManager().install())
 
