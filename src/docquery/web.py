@@ -12,6 +12,7 @@ log = get_logger("web")
 
 try:
     from selenium import webdriver
+    from selenium.common import exceptions
     from selenium.webdriver.chrome.options import Options
     from webdriver_manager.chrome import ChromeDriverManager
     from webdriver_manager.core.utils import ChromeType
@@ -33,6 +34,9 @@ class WebDriver:
                 "Web imports are unavailable. You must install the [web] extra and chrome or" " chromium system-wide."
             )
 
+        self._reinit_driver()
+
+    def _reinit_driver(self):
         options = Options()
         options.headless = True
         options.add_argument("--window-size=1920,1200")
@@ -43,12 +47,20 @@ class WebDriver:
             options=options, executable_path=ChromeDriverManager(chrome_type=ChromeType.CHROMIUM).install()
         )
 
-    def get(self, page):
-        self.driver.get(page)
+    def get(self, page, retry=True):
+        try:
+            self.driver.get(page)
+        except exceptions.InvalidSessionIdException:
+            if retry:
+                # Forgive an invalid session once and try again
+                self._reinit_driver()
+                return self.get(page, retry=False)
+            else:
+                raise
 
     def get_html(self, html):
         # https://stackoverflow.com/questions/22538457/put-a-string-with-html-javascript-into-selenium-webdriver
-        self.driver.get("data:text/html;charset=utf-8," + html)
+        self.get("data:text/html;charset=utf-8," + html)
 
     def find_word_boxes(self):
         # Assumes the driver has been pointed at the right website already
