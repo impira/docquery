@@ -56,7 +56,7 @@ class WebDriver:
         )
 
     # TODO: Handle horizontal scrolling
-    def screenshots_png(self):
+    def scroll_and_screenshot(self):
         tops = []
         images = []
         dims = self.driver.execute_script(
@@ -69,15 +69,22 @@ class WebDriver:
         view_height = dims["vh"]
         doc_height = dims["dh"]
 
-        self.driver.execute_script("window.scroll(0, 0)")
-        while True:
+        try:
+            self.driver.execute_script("window.scroll(0, 0)")
             curr = self.driver.execute_script("return window.scrollY")
-            tops.append(curr)
-            images.append(self.driver.get_screenshot_as_png())
-            if curr + view_height < doc_height:
-                curr = self.driver.execute_script(f"window.scroll(0, {curr+view_height})")
-            else:
-                break
+
+            while True:
+                tops.append(curr)
+                images.append(self.driver.get_screenshot_as_png())
+                if curr + view_height < doc_height:
+                    self.driver.execute_script(f"window.scroll(0, {curr+view_height})")
+
+                curr = self.driver.execute_script("return window.scrollY")
+                if curr <= tops[-1]:
+                    break
+        finally:
+            # Reset scroll to the top of the page
+            self.driver.execute_script("window.scroll(0, 0)")
 
         return tops, images
 

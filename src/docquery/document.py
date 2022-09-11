@@ -211,7 +211,7 @@ class WebDocument(Document):
     @cached_property
     def page_screenshots(self):
         self.ensure_loaded()
-        return self.driver.screenshots_png()
+        return self.driver.scroll_and_screenshot()
 
     @cached_property
     def preview(self) -> "Image":
@@ -228,7 +228,6 @@ class WebDocument(Document):
         page = 0
         offset = 0
 
-        # TODO: This assumes everything fits in a page, which is likely a bad assumption
         words = [[] for _ in range(n_pages)]
         boxes = [[] for _ in range(n_pages)]
         for word_box in word_boxes["word_boxes"]:
@@ -241,6 +240,7 @@ class WebDocument(Document):
             words[page].append(word_box["text"])
             boxes[page].append((box["left"], box["top"] - offset, box["right"], box["bottom"] - offset))
 
+        # XXX Need to clip the last window in case there is overlap with the previous one
         return self._generate_document_output(
             self.preview, words, boxes, [(word_boxes["vw"], word_boxes["vh"])] * n_pages
         )
