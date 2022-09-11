@@ -236,7 +236,7 @@ class WebDocument(Document):
 @validate_arguments
 def load_document(fpath: str, ocr_reader: Optional[Union[str, OCRReader]] = None):
     base_path = os.path.basename(fpath).split("?")[0].strip()
-    doc_type = mimetypes.guess_type(base_path)
+    doc_type = mimetypes.guess_type(base_path)[0]
     if fpath.startswith("http://") or fpath.startswith("https://"):
         resp = requests.get(fpath, allow_redirects=True, stream=True)
         if not resp.ok:
