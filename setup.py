@@ -39,7 +39,8 @@ extras_require = {
     ],
     "web": [
         "selenium",
-    ]
+        "webdriver-manager",
+    ],
     "cli": [],
 }
 extras_require["all"] = sorted({package for packages in extras_require.values() for package in packages})

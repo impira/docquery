@@ -11,11 +11,9 @@ from .ext.functools import cached_property
 log = get_logger("web")
 
 try:
-    from chromedriver_py import (  # This library allows you to download the driver for your version of chrome
-        binary_path,
-    )
     from selenium import webdriver
     from selenium.webdriver.chrome.options import Options
+    from webdriver_manager.chrome import ChromeDriverManager
 
     WEB_AVAILABLE = True
 except ImportError as e:
@@ -40,7 +38,7 @@ class WebDriver:
         options.headless = True
         options.add_argument("--window-size=1920,1200")
 
-        self.driver = webdriver.Chrome(options=options, executable_path=binary_path)
+        self.driver = webdriver.Chrome(options=options, executable_path=ChromeDriverManager().install())
 
     def get(self, page):
         self.driver.get(page)

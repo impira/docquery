@@ -83,7 +83,9 @@ DocQuery is intended to have a small install footprint and be simple to work wit
 - Support for images and PDFs. Currently DocQuery supports images and PDFs, with or without embedded text. It does not support word documents, emails, spreadsheets, etc.
 - Scalar text outputs. DocQuery only produces text outputs (answers). It does not support richer scalar types (i.e. it treats numbers and dates as strings) or tables.
 
-## Using Donut 🍩
+## Advanced features
+
+### Using Donut 🍩
 
 If you'd like to test `docquery` with [Donut](https://arxiv.org/abs/2111.15664), you must install a special version of transformers:
 
@@ -97,7 +99,7 @@ since it has not yet been released in a tagged release. You can then run
 docquery scan "What is the effective date?" /path/to/contracts/folder --checkpoint 'naver-clova-ix/donut-base-finetuned-docvqa'
 ```
 
-## Classifying documents
+### Classifying documents
 
 To classify documents, you simply add the `--classify` argument to `scan`. You can specify any [image classification](https://huggingface.co/models?pipeline_tag=image-classification&sort=downloads)
 model on Hugging Face's hub. By default, the classification pipeline uses [Donut](https://huggingface.co/spaces/nielsr/donut-rvlcdip) (which requires
@@ -110,6 +112,17 @@ docquery scan --classify  /path/to/contracts/folder --checkpoint 'naver-clova-ix
 
 # Classify documents and ask a question too
 docquery scan --classify "What is the effective date?" /path/to/contracts/folder --checkpoint 'naver-clova-ix/donut-base-finetuned-docvqa'
+```
+
+### Scraping webpages
+
+DocQuery can read files through HTTP/HTTPs out of the box. However, if you want to read HTML documents, you can do that too by installing the
+`[web]` extension. The extension uses the [webdriver-manager](https://pypi.org/project/webdriver-manager/) library which can install a Chrome
+driver on your system automatically, but you'll need to make sure Chrome is installed globally.
+
+```
+# Find the top post on hacker news
+docquery scan "What is the #1 post's title?" https://news.ycombinator.com
 ```
 
 ## Where to go from here
