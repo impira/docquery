@@ -2,7 +2,7 @@ import os
 from io import BytesIO
 from pathlib import Path
 
-from PIL import Image, UnidentifiedImageError
+from PIL import Image
 
 from .config import get_logger
 from .ext.functools import cached_property
