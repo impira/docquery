@@ -14,10 +14,10 @@ try:
     from selenium import webdriver
     from selenium.webdriver.chrome.options import Options
     from webdriver_manager.chrome import ChromeDriverManager
+    from webdriver_manager.core.utils import ChromeType
 
     WEB_AVAILABLE = True
-except ImportError as e:
-    log.warning("%s" % (e))
+except ImportError:
     WEB_AVAILABLE = False
 
 
@@ -30,8 +30,7 @@ class WebDriver:
     def __init__(self):
         if not WEB_AVAILABLE:
             raise ValueError(
-                "Web imports are unavailable. You must install the [web] extra and a version of"
-                " chromedriver_py compatible with your system"
+                "Web imports are unavailable. You must install the [web] extra and chrome or" " chromium system-wide."
             )
 
         options = Options()
@@ -40,7 +39,9 @@ class WebDriver:
         if os.geteuid() == 0:
             options.add_argument("--no-sandbox")
 
-        self.driver = webdriver.Chrome(options=options, executable_path=ChromeDriverManager().install())
+        self.driver = webdriver.Chrome(
+            options=options, executable_path=ChromeDriverManager(chrome_type=ChromeType.CHROMIUM).install()
+        )
 
     def get(self, page):
         self.driver.get(page)
