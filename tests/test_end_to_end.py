@@ -71,6 +71,31 @@ EXAMPLES = [
             }
         ],
     ),
+    Example(
+        name="readme",
+        path="https://github.com/impira/docquery/blob/ef73fa7e8069773ace03efae2254f3a510a814ef/README.md",
+        qa_pairs=[
+            {
+                "question": "What are the use cases for DocQuery?",
+                "answers": {
+                    # These examples demonstrate the fact that the "word_boxes" are way too coarse in the web document implementation
+                    "LayoutLMv1": {
+                        "score": 0.6288,
+                        "answer": "DocQuery is a library and command-line tool that makes it easy to analyze semi-structured and unstructured documents (PDFs, scanned images, etc.) using large language models (LLMs). You simply point DocQuery at one or more documents and specify a question you want to ask. DocQuery is created by the team at Impira.",
+                        "word_ids": [43],
+                        "page": 0,
+                    },
+                    "LayoutLMv1-Invoices": {
+                        "score": 0.9136,
+                        "answer": "DocQuery is a library and command-line tool that makes it easy to analyze semi-structured and unstructured documents (PDFs, scanned images, etc.) using large language models (LLMs). You simply point DocQuery at one or more documents and specify a question you want to ask. DocQuery is created by the team at Impira.",
+                        "word_ids": [43],
+                        "page": 0,
+                    },
+                    "Donut": {"answer": "engine Powered by large language"},
+                },
+            }
+        ],
+    ),
 ]
 
 
