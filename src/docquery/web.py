@@ -1,5 +1,8 @@
 import os
+from io import BytesIO
 from pathlib import Path
+
+from PIL import Image, UnidentifiedImageError
 
 from .config import get_logger
 from .ext.functools import cached_property
@@ -75,7 +78,7 @@ class WebDriver:
 
             while True:
                 tops.append(curr)
-                images.append(self.driver.get_screenshot_as_png())
+                images.append(Image.open(BytesIO(self.driver.get_screenshot_as_png())))
                 if curr + view_height < doc_height:
                     self.driver.execute_script(f"window.scroll(0, {curr+view_height})")
 
@@ -85,6 +88,18 @@ class WebDriver:
         finally:
             # Reset scroll to the top of the page
             self.driver.execute_script("window.scroll(0, 0)")
+
+        if len(tops) >= 2:
+            _, second_last_height = images[-2].size
+            if tops[-1] - tops[-2] < second_last_height:
+                # This occurs when the last screenshot should be "clipped". Adjust the last "top"
+                # to correspond to the right view_height and clip the screenshot accordingly
+                delta = second_last_height - (tops[-1] - tops[-2])
+                tops[-1] += delta
+
+                last_img = images[-1]
+                last_width, last_height = last_img.size
+                images[-1] = last_img.crop((0, delta, last_width, last_height))
 
         return tops, images
 

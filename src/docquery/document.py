@@ -5,6 +5,7 @@ from io import BytesIO
 from typing import Any, Dict, List, Optional, Tuple, Union
 
 import requests
+from PIL import Image, UnidentifiedImageError
 from pydantic import validate_arguments
 
 from .ext.functools import cached_property
@@ -20,16 +21,8 @@ class UnsupportedDocument(Exception):
         return f"unsupported file type: {self.e}"
 
 
-PIL_AVAILABLE = False
 PDF_2_IMAGE = False
 PDF_PLUMBER = False
-
-try:
-    from PIL import Image, UnidentifiedImageError
-
-    PIL_AVAILABLE = True
-except ImportError:
-    pass
 
 try:
     import pdf2image
@@ -44,11 +37,6 @@ try:
     PDF_PLUMBER = True
 except ImportError:
     pass
-
-
-def use_pil():
-    if not PIL_AVAILABLE:
-        raise UnsupportedDocument("Unable to import PIL (images will be unavailable)")
 
 
 def use_pdf2_image():
@@ -215,7 +203,7 @@ class WebDocument(Document):
 
     @cached_property
     def preview(self) -> "Image":
-        return [Image.open(BytesIO(img)).convert("RGB") for img in self.page_screenshots[1]]
+        return [img.convert("RGB") for img in self.page_screenshots[1]]
 
     @cached_property
     def context(self) -> Dict[str, List[Tuple["Image.Image", List[Any]]]]:
@@ -234,13 +222,12 @@ class WebDocument(Document):
             box = word_box["box"]
 
             if page < len(tops) - 1 and box["top"] >= tops[page + 1]:
-                offset = tops[page]
                 page += 1
+                offset = tops[page]
 
             words[page].append(word_box["text"])
             boxes[page].append((box["left"], box["top"] - offset, box["right"], box["bottom"] - offset))
 
-        # XXX Need to clip the last window in case there is overlap with the previous one
         return self._generate_document_output(
             self.preview, words, boxes, [(word_boxes["vw"], word_boxes["vh"])] * n_pages
         )
@@ -272,7 +259,6 @@ def load_document(fpath: str, ocr_reader: Optional[Union[str, OCRReader]] = None
     elif doc_type == "text/html":
         return WebDocument(fpath)
     else:
-        use_pil()
         try:
             img = Image.open(b)
         except UnidentifiedImageError as e:
