@@ -32,19 +32,11 @@ function findLeafNodes(node) {
     false
   );
 
-  const vp = computeViewport();
-
   while (walk.nextNode()) {
     var node = walk.currentNode;
     var range = document.createRange();
     range.selectNodeContents(node);
-    var clientRects = range.getClientRects();
-
-    var rects = [];
-    for (var i = 0; i < clientRects.length; i++) {
-      rects.push(clientRects[i]);
-    }
-
+    var rects = Array.from(range.getClientRects());
     if (rects.length > 0) {
       var box = rects.reduce(function (previousValue, currentValue) {
         return {
