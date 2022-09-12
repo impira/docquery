@@ -82,7 +82,7 @@ def main(args):
                 if isinstance(response, list):
                     response = response[0] if len(response) > 0 else None
             except Exception:
-                log.error(f"Failed while processing {str(p)} on question {q}!")
+                log.error(f"Failed while processing {str(p)} on question: '{q}'")
                 raise
 
             answer = response["answer"] if response is not None else "NULL"

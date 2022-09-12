@@ -1,19 +1,16 @@
 import abc
+import mimetypes
 import os
 from io import BytesIO
 from typing import Any, Dict, List, Optional, Tuple, Union
 
 import requests
+from PIL import Image, UnidentifiedImageError
 from pydantic import validate_arguments
 
+from .ext.functools import cached_property
 from .ocr_reader import NoOCRReaderFound, OCRReader, get_ocr_reader
-
-
-try:
-    from functools import cached_property as cached_property
-except ImportError:
-    # for python 3.7 support fall back to just property
-    cached_property = property
+from .web import get_webdriver
 
 
 class UnsupportedDocument(Exception):
@@ -24,16 +21,8 @@ class UnsupportedDocument(Exception):
         return f"unsupported file type: {self.e}"
 
 
-PIL_AVAILABLE = False
 PDF_2_IMAGE = False
 PDF_PLUMBER = False
-
-try:
-    from PIL import Image, UnidentifiedImageError
-
-    PIL_AVAILABLE = True
-except ImportError:
-    pass
 
 try:
     import pdf2image
@@ -50,11 +39,6 @@ except ImportError:
     pass
 
 
-def use_pil():
-    if not PIL_AVAILABLE:
-        raise UnsupportedDocument("Unable to import PIL (images will be unavailable)")
-
-
 def use_pdf2_image():
     if not PDF_2_IMAGE:
         raise UnsupportedDocument("Unable to import pdf2image (OCR will be unavailable for pdfs)")
@@ -66,10 +50,6 @@ def use_pdf_plumber():
 
 
 class Document(metaclass=abc.ABCMeta):
-    def __init__(self, b, ocr_reader):
-        self.b = b
-        self.ocr_reader = ocr_reader
-
     @property
     @abc.abstractmethod
     def context(self) -> Tuple[(str, List[int])]:
@@ -121,6 +101,12 @@ class Document(metaclass=abc.ABCMeta):
 
 
 class PDFDocument(Document):
+    def __init__(self, b, ocr_reader, **kwargs):
+        self.b = b
+        self.ocr_reader = ocr_reader
+
+        super().__init__(**kwargs)
+
     @cached_property
     def context(self) -> Dict[str, List[Tuple["Image.Image", List[Any]]]]:
         pdf = self._pdf
@@ -178,6 +164,12 @@ class PDFDocument(Document):
 
 
 class ImageDocument(Document):
+    def __init__(self, b, ocr_reader, **kwargs):
+        self.b = b
+        self.ocr_reader = ocr_reader
+
+        super().__init__(**kwargs)
+
     @cached_property
     def preview(self) -> "Image":
         return [self.b.convert("RGB")]
@@ -188,29 +180,85 @@ class ImageDocument(Document):
         return self._generate_document_output([self.b], [words], [boxes], [(self.b.width, self.b.height)])
 
 
+class WebDocument(Document):
+    def __init__(self, url, **kwargs):
+        if not (url.startswith("http://") or url.startswith("https://")):
+            url = "file://" + url
+        self.url = url
+
+        # TODO: This is a singleton, which is not thread-safe. We may want to relax this
+        # behavior to allow the user to pass in their own driver (which could either be a
+        # singleton or a custom instance).
+        self.driver = get_webdriver()
+
+        super().__init__(**kwargs)
+
+    def ensure_loaded(self):
+        self.driver.get(self.url)
+
+    @cached_property
+    def page_screenshots(self):
+        self.ensure_loaded()
+        return self.driver.scroll_and_screenshot()
+
+    @cached_property
+    def preview(self) -> "Image":
+        return [img.convert("RGB") for img in self.page_screenshots[1]]
+
+    @cached_property
+    def context(self) -> Dict[str, List[Tuple["Image.Image", List[Any]]]]:
+        self.ensure_loaded()
+        word_boxes = self.driver.find_word_boxes()
+
+        tops, _ = self.page_screenshots
+
+        n_pages = len(tops)
+        page = 0
+        offset = 0
+
+        words = [[] for _ in range(n_pages)]
+        boxes = [[] for _ in range(n_pages)]
+        for word_box in word_boxes["word_boxes"]:
+            box = word_box["box"]
+
+            if page < len(tops) - 1 and box["top"] >= tops[page + 1]:
+                page += 1
+                offset = tops[page]
+
+            words[page].append(word_box["text"])
+            boxes[page].append((box["left"], box["top"] - offset, box["right"], box["bottom"] - offset))
+
+        return self._generate_document_output(
+            self.preview, words, boxes, [(word_boxes["vw"], word_boxes["vh"])] * n_pages
+        )
+
+
 @validate_arguments
 def load_document(fpath: str, ocr_reader: Optional[Union[str, OCRReader]] = None):
+    base_path = os.path.basename(fpath).split("?")[0].strip()
+    doc_type = mimetypes.guess_type(base_path)[0]
     if fpath.startswith("http://") or fpath.startswith("https://"):
-        resp = requests.get(fpath, stream=True)
+        resp = requests.get(fpath, allow_redirects=True, stream=True)
         if not resp.ok:
             raise UnsupportedDocument(f"Failed to download: {resp.content}")
+
+        if "Content-Type" in resp.headers:
+            doc_type = resp.headers["Content-Type"].split(";")[0].strip()
+
         b = resp.raw
     else:
         b = open(fpath, "rb")
-    return load_bytes(b, fpath, ocr_reader=ocr_reader)
 
-
-def load_bytes(b, fpath, ocr_reader: Optional[Union[str, Any]]):
     if not ocr_reader or isinstance(ocr_reader, str):
         ocr_reader = get_ocr_reader(ocr_reader)
     elif not isinstance(ocr_reader, OCRReader):
         raise NoOCRReaderFound(f"{ocr_reader} is not a supported OCRReader class")
 
-    extension = os.path.basename(fpath).rsplit(".", 1)[-1].split("?")[0].strip()
-    if extension in ("pdf"):
+    if doc_type == "application/pdf":
         return PDFDocument(b.read(), ocr_reader=ocr_reader)
+    elif doc_type == "text/html":
+        return WebDocument(fpath)
     else:
-        use_pil()
         try:
             img = Image.open(b)
         except UnidentifiedImageError as e:

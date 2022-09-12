@@ -37,6 +37,10 @@ extras_require = {
         "sentencepiece",
         "protobuf<=3.20.1",
     ],
+    "web": [
+        "selenium",
+        "webdriver-manager",
+    ],
     "cli": [],
 }
 extras_require["all"] = sorted({package for packages in extras_require.values() for package in packages})
@@ -59,6 +63,7 @@ setuptools.setup(
         "Operating System :: OS Independent",
     ],
     package_dir={"": "src"},
+    package_data={"": ["find_leaf_nodes.js"]},
     packages=setuptools.find_packages(where="src"),
     python_requires=">=3.7.0",
     entry_points={
