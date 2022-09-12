@@ -80,13 +80,13 @@ EXAMPLES = [
                 "answers": {
                     # These examples demonstrate the fact that the "word_boxes" are way too coarse in the web document implementation
                     "LayoutLMv1": {
-                        "score": 0.6288,
-                        "answer": "DocQuery is a library and command-line tool that makes it easy to analyze semi-structured and unstructured documents (PDFs, scanned images, etc.) using large language models (LLMs). You simply point DocQuery at one or more documents and specify a question you want to ask. DocQuery is created by the team at Impira.",
-                        "word_ids": [43],
-                        "page": 0,
+                        "score": 0.7728,
+                        "answer": "DocQuery excels at a number of use cases involving structured, semi-structured, or unstructured documents. You can ask questions about invoices, contracts, forms, emails, letters, receipts, and many more. You can also classify documents. We will continue evolving the model, offer more modeling options, and expanding the set of supported documents. We welcome feedback, requests, and of course contributions to help achieve this vision.",
+                        "word_ids": [7],
+                        "page": 1,
                     },
                     "LayoutLMv1-Invoices": {
-                        "score": 0.9136,
+                        "score": 0.7931,
                         "answer": "DocQuery is a library and command-line tool that makes it easy to analyze semi-structured and unstructured documents (PDFs, scanned images, etc.) using large language models (LLMs). You simply point DocQuery at one or more documents and specify a question you want to ask. DocQuery is created by the team at Impira.",
                         "word_ids": [43],
                         "page": 0,
