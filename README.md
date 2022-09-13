@@ -5,7 +5,7 @@
 [![Demo](https://img.shields.io/badge/Demo-Gradio-brightgreen)](https://huggingface.co/spaces/impira/docquery)
 [![Demo](https://img.shields.io/badge/Demo-Colab-orange)](https://github.com/impira/docquery/blob/main/docquery_example.ipynb)
 [![PyPI](https://img.shields.io/pypi/v/docquery?color=green&label=pip%20install%20docquery)](https://pepy.tech/project/docquery)
-[![Discord](https://img.shields.io/discord/1015684761471160402?label=Chat)](https://discord.com/invite/Sxu4qWCM)
+[![Discord](https://img.shields.io/discord/1015684761471160402?label=Chat)](https://discord.gg/HucNfTtx7V)
 [![Downloads](https://static.pepy.tech/personalized-badge/docquery?period=total&units=international_system&left_color=grey&right_color=green&left_text=Downloads)](https://pepy.tech/project/docquery)
 
 </div>
