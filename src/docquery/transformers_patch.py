@@ -6,28 +6,20 @@ from collections import OrderedDict
 from typing import Optional, Union
 
 import torch
-from transformers import (
-    AutoConfig,
-    AutoModelForImageClassification,
-    AutoTokenizer,
-    PreTrainedTokenizer,
-    PreTrainedTokenizerFast,
-    VisionEncoderDecoderConfig,
-    VisionEncoderDecoderModel,
-)
+from transformers import AutoConfig, AutoModel, AutoTokenizer, PreTrainedTokenizer, PreTrainedTokenizerFast
 from transformers import pipeline as transformers_pipeline
 from transformers.models.auto.auto_factory import _BaseAutoModelClass, _LazyAutoMapping
 from transformers.models.auto.configuration_auto import CONFIG_MAPPING_NAMES
 from transformers.pipelines import PIPELINE_REGISTRY
 
 from .ext.model import LayoutLMForQuestionAnswering
+from .ext.pipeline_document_classification import DocumentClassificationPipeline
 from .ext.pipeline_document_question_answering import DocumentQuestionAnsweringPipeline
-from .ext.pipeline_image_classification import ImageClassificationPipeline
 
 
 PIPELINE_DEFAULTS = {
     "document-question-answering": "impira/layoutlm-document-qa",
-    "image-classification": "naver-clova-ix/donut-base-finetuned-rvlcdip",
+    "document-classification": "impira/layoutlm-document-classification",
 }
 
 # These revisions are pinned so that the "default" experience in DocQuery is both fast (does not
@@ -47,12 +39,29 @@ MODEL_FOR_DOCUMENT_QUESTION_ANSWERING_MAPPING_NAMES = OrderedDict(
 )
 
 MODEL_FOR_DOCUMENT_QUESTION_ANSWERING_MAPPING = _LazyAutoMapping(
-    CONFIG_MAPPING_NAMES, MODEL_FOR_DOCUMENT_QUESTION_ANSWERING_MAPPING_NAMES
+    CONFIG_MAPPING_NAMES,
+    MODEL_FOR_DOCUMENT_QUESTION_ANSWERING_MAPPING_NAMES,
+)
+
+
+MODEL_FOR_DOCUMENT_CLASSIFICATION_MAPPING_NAMES = OrderedDict(
+    [
+        ("layoutlm", "LayoutLMForSequenceClassification"),
+    ]
+)
+
+MODEL_FOR_DOCUMENT_CLASSIFICATION_MAPPING = _LazyAutoMapping(
+    CONFIG_MAPPING_NAMES,
+    MODEL_FOR_DOCUMENT_CLASSIFICATION_MAPPING_NAMES,
 )
 
 
 class AutoModelForDocumentQuestionAnswering(_BaseAutoModelClass):
     _model_mapping = MODEL_FOR_DOCUMENT_QUESTION_ANSWERING_MAPPING
+
+
+class AutoModelForDocumentClassification(_BaseAutoModelClass):
+    _model_mapping = MODEL_FOR_DOCUMENT_CLASSIFICATION_MAPPING
 
 
 PIPELINE_REGISTRY.register_pipeline(
@@ -61,15 +70,10 @@ PIPELINE_REGISTRY.register_pipeline(
     pt_model=AutoModelForDocumentQuestionAnswering,
 )
 
-# The Donut model used for image classification defined here: https://huggingface.co/naver-clova-ix/donut-base-finetuned-rvlcdip
-# declares itself a VisionEncoderDecoderModel, not a DonutModel, so we have to register the former in the Auto Class. We may want
-# to fork this model and setup a different configuration that specifies Donut
-AutoModelForImageClassification.register(VisionEncoderDecoderConfig, VisionEncoderDecoderModel)
-
 PIPELINE_REGISTRY.register_pipeline(
-    "image-classification",
-    pipeline_class=ImageClassificationPipeline,
-    pt_model=AutoModelForImageClassification,
+    "document-classification",
+    pipeline_class=DocumentClassificationPipeline,
+    pt_model=AutoModelForDocumentClassification,
 )
 
 
