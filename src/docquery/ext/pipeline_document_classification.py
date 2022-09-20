@@ -227,6 +227,7 @@ class DocumentClassificationPipeline(ChunkPipeline):
                     stride=doc_stride,
                     return_token_type_ids=True,
                     is_split_into_words=True,
+                    truncation=True,
                     return_overflowing_tokens=True,
                 )
 
