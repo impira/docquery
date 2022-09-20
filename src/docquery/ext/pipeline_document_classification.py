@@ -290,7 +290,7 @@ class DocumentClassificationPipeline(ChunkPipeline):
                 function_to_apply = ClassificationFunction.NONE
 
         if self.model_type == ModelType.VisionEncoderDecoder:
-            answers = [self.postprocess_encoder_decoder_single(o) for o in model_outputs]
+            answers = self.postprocess_encoder_decoder(model_outputs, top_k=top_k, **kwargs)
         else:
             answers = self.postprocess_standard(
                 model_outputs, function_to_apply=function_to_apply, top_k=top_k, **kwargs
@@ -299,17 +299,18 @@ class DocumentClassificationPipeline(ChunkPipeline):
         answers = sorted(answers, key=lambda x: x.get("score", 0), reverse=True)[:top_k]
         return answers
 
-    def postprocess_encoder_decoder_single(self, model_outputs, top_k, **kwargs):
-        ret = []
-        for sequence in self.tokenizer.batch_decode(model_outputs.sequences):
-            sequence = sequence.replace(self.tokenizer.eos_token, "").replace(self.tokenizer.pad_token, "")
-            sequence = re.sub(r"<.*?>", "", sequence, count=1).strip()  # remove first task start token
-            ret.append({"label": donut_token2json(self.tokenizer, sequence)["class"]})
-        return ret[:top_k]
+    def postprocess_encoder_decoder(self, model_outputs, **kwargs):
+        classes = set()
+        for model_output in model_outputs:
+            for sequence in self.tokenizer.batch_decode(model_output.sequences):
+                sequence = sequence.replace(self.tokenizer.eos_token, "").replace(self.tokenizer.pad_token, "")
+                sequence = re.sub(r"<.*?>", "", sequence, count=1).strip()  # remove first task start token
+                classes.add(donut_token2json(self.tokenizer, sequence)["class"])
 
-    def postprocess_standard(self, model_outputs, function_to_apply, top_k, **kwargs):
-        top_k = min(top_k, self.model.config.num_labels)
+        # Return the first top_k unique classes we see
+        return [{"label": v} for v in classes]
 
+    def postprocess_standard(self, model_outputs, function_to_apply, **kwargs):
         # Average the score across pages
         sum_scores = {k: 0 for k in self.model.config.id2label.values()}
         for model_output in model_outputs:

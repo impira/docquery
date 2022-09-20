@@ -44,6 +44,6 @@ EXAMPLES = [
 @pytest.mark.parametrize("model", CHECKPOINTS.keys())
 def test_impira_dataset(example, model):
     document = load_document(example.path)
-    pipe = pipeline("image-classification", model=CHECKPOINTS[model])
-    resp = pipe(images=document.preview, top_k=1)[0]
+    pipe = pipeline("document-classification", model=CHECKPOINTS[model])
+    resp = pipe(top_k=1, **document.context)
     assert resp == [{"label": x} for x in example.classes[model]]
