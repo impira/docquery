@@ -1,4 +1,3 @@
-import copy
 from dataclasses import dataclass
 from typing import Optional, Tuple, Union
 
@@ -7,17 +6,13 @@ from torch import nn
 from transformers import LayoutLMModel, LayoutLMPreTrainedModel
 from transformers.modeling_outputs import QuestionAnsweringModelOutput as QuestionAnsweringModelOutputBase
 
-from .config import LayoutLMConfig, LayoutLMTokenClassifierConfig
-
 
 @dataclass
 class QuestionAnsweringModelOutput(QuestionAnsweringModelOutputBase):
     token_logits: Optional[torch.FloatTensor] = None
 
 
-class LayoutLMTokenClassifierForQuestionAnswering(LayoutLMPreTrainedModel):
-    config_class = LayoutLMTokenClassifierConfig
-
+class LayoutLMForQuestionAnswering(LayoutLMPreTrainedModel):
     def __init__(self, config, has_visual_segment_embedding=True):
         super().__init__(config)
         self.num_labels = config.num_labels
@@ -183,15 +178,3 @@ class LayoutLMTokenClassifierForQuestionAnswering(LayoutLMPreTrainedModel):
             hidden_states=outputs.hidden_states,
             attentions=outputs.attentions,
         )
-
-
-# This is a thin wrapper around LayoutLMTokenClassifierForQuestionAnswering that simply instantiates
-# a default value for token_classification. Once we update transformers to be a version that
-# includes the upstremed LayoutLMForQuestionAnswering class, we can remove this.
-class LayoutLMForQuestionAnswering(LayoutLMTokenClassifierForQuestionAnswering):
-    config_class = LayoutLMConfig
-
-    def __init__(self, config, **kwargs):
-        config = copy.deepcopy(config)
-        config.token_classification = False
-        super().__init__(config, **kwargs)
