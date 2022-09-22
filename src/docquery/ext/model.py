@@ -12,6 +12,19 @@ class QuestionAnsweringModelOutput(QuestionAnsweringModelOutputBase):
     token_logits: Optional[torch.FloatTensor] = None
 
 
+# There are three additional config parameters that this model supports, which are not part of the
+# LayoutLMForQuestionAnswering in mainline transformers. These config parameters control the additional
+# token classifier head.
+#
+# token_classification (`bool, *optional*, defaults to False):
+#     Whether to include an additional token classification head in question answering
+# token_classifier_reduction (`str`, *optional*, defaults to "mean")
+#     Specifies the reduction to apply to the output of the cross entropy loss for the token classifier head during
+#     training. Options are: 'none' | 'mean' | 'sum'. 'none': no reduction will be applied, 'mean': the weighted
+#     mean of the output is taken, 'sum': the output will be summed.
+# token_classifier_constant (`float`, *optional*, defaults to 1.0)
+#     Coefficient for the token classifier head's contribution to the total loss. A larger value means that the model
+#     will prioritize learning the token classifier head during training.
 class LayoutLMForQuestionAnswering(LayoutLMPreTrainedModel):
     def __init__(self, config, has_visual_segment_embedding=True):
         super().__init__(config)
