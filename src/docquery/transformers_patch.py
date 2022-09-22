@@ -35,7 +35,7 @@ PIPELINE_DEFAULTS = {
 # result in new versions of DocQuery). This may eventually change.
 DEFAULT_REVISIONS = {
     "impira/layoutlm-document-qa": "ff904df",
-    "impira/layoutlm-invoices": "f3db68b",
+    "impira/layoutlm-invoices": "783b0c2",
     "naver-clova-ix/donut-base-finetuned-rvlcdip": "5998e9f",
 }
 
