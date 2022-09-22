@@ -1,4 +1,3 @@
-import copy
 from dataclasses import dataclass
 from typing import Optional, Tuple, Union
 
@@ -7,17 +6,26 @@ from torch import nn
 from transformers import LayoutLMModel, LayoutLMPreTrainedModel
 from transformers.modeling_outputs import QuestionAnsweringModelOutput as QuestionAnsweringModelOutputBase
 
-from .config import LayoutLMConfig, LayoutLMTokenClassifierConfig
-
 
 @dataclass
 class QuestionAnsweringModelOutput(QuestionAnsweringModelOutputBase):
     token_logits: Optional[torch.FloatTensor] = None
 
 
-class LayoutLMTokenClassifierForQuestionAnswering(LayoutLMPreTrainedModel):
-    config_class = LayoutLMTokenClassifierConfig
-
+# There are three additional config parameters that this model supports, which are not part of the
+# LayoutLMForQuestionAnswering in mainline transformers. These config parameters control the additional
+# token classifier head.
+#
+# token_classification (`bool, *optional*, defaults to False):
+#     Whether to include an additional token classification head in question answering
+# token_classifier_reduction (`str`, *optional*, defaults to "mean")
+#     Specifies the reduction to apply to the output of the cross entropy loss for the token classifier head during
+#     training. Options are: 'none' | 'mean' | 'sum'. 'none': no reduction will be applied, 'mean': the weighted
+#     mean of the output is taken, 'sum': the output will be summed.
+# token_classifier_constant (`float`, *optional*, defaults to 1.0)
+#     Coefficient for the token classifier head's contribution to the total loss. A larger value means that the model
+#     will prioritize learning the token classifier head during training.
+class LayoutLMForQuestionAnswering(LayoutLMPreTrainedModel):
     def __init__(self, config, has_visual_segment_embedding=True):
         super().__init__(config)
         self.num_labels = config.num_labels
@@ -25,8 +33,11 @@ class LayoutLMTokenClassifierForQuestionAnswering(LayoutLMPreTrainedModel):
         self.layoutlm = LayoutLMModel(config)
         self.qa_outputs = nn.Linear(config.hidden_size, config.num_labels)
 
+        # NOTE: We have to use getattr() here because we do not patch the LayoutLMConfig
+        # class to have these extra attributes, so existing LayoutLM models may not have
+        # them in their configuration.
         self.token_classifier_head = None
-        if self.config.token_classification:
+        if getattr(self.config, "token_classification", False):
             self.token_classifier_head = nn.Linear(config.hidden_size, 2)
 
         # Initialize weights and apply final processing
@@ -149,7 +160,7 @@ class LayoutLMTokenClassifierForQuestionAnswering(LayoutLMPreTrainedModel):
             total_loss = (start_loss + end_loss) / 2
 
         token_logits = None
-        if self.config.token_classification:
+        if getattr(self.config, "token_classification", False):
             token_logits = self.token_classifier_head(sequence_output)
 
             if token_labels is not None:
@@ -183,15 +194,3 @@ class LayoutLMTokenClassifierForQuestionAnswering(LayoutLMPreTrainedModel):
             hidden_states=outputs.hidden_states,
             attentions=outputs.attentions,
         )
-
-
-# This is a thin wrapper around LayoutLMTokenClassifierForQuestionAnswering that simply instantiates
-# a default value for token_classification. Once we update transformers to be a version that
-# includes the upstremed LayoutLMForQuestionAnswering class, we can remove this.
-class LayoutLMForQuestionAnswering(LayoutLMTokenClassifierForQuestionAnswering):
-    config_class = LayoutLMConfig
-
-    def __init__(self, config, **kwargs):
-        config = copy.deepcopy(config)
-        config.token_classification = False
-        super().__init__(config, **kwargs)

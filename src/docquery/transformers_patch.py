@@ -8,7 +8,6 @@ from typing import Optional, Union
 import torch
 from transformers import (
     AutoConfig,
-    AutoModel,
     AutoModelForImageClassification,
     AutoTokenizer,
     PreTrainedTokenizer,
@@ -21,8 +20,7 @@ from transformers.models.auto.auto_factory import _BaseAutoModelClass, _LazyAuto
 from transformers.models.auto.configuration_auto import CONFIG_MAPPING_NAMES
 from transformers.pipelines import PIPELINE_REGISTRY
 
-from .ext.config import LayoutLMConfig, LayoutLMTokenClassifierConfig
-from .ext.model import LayoutLMForQuestionAnswering, LayoutLMTokenClassifierForQuestionAnswering
+from .ext.model import LayoutLMForQuestionAnswering
 from .ext.pipeline_document_question_answering import DocumentQuestionAnsweringPipeline
 from .ext.pipeline_image_classification import ImageClassificationPipeline
 
@@ -37,14 +35,13 @@ PIPELINE_DEFAULTS = {
 # result in new versions of DocQuery). This may eventually change.
 DEFAULT_REVISIONS = {
     "impira/layoutlm-document-qa": "ff904df",
-    "impira/layoutlm-invoices": "f3db68b",
+    "impira/layoutlm-invoices": "783b0c2",
     "naver-clova-ix/donut-base-finetuned-rvlcdip": "5998e9f",
 }
 
 MODEL_FOR_DOCUMENT_QUESTION_ANSWERING_MAPPING_NAMES = OrderedDict(
     [
         ("layoutlm", "LayoutLMForQuestionAnswering"),
-        ("layoutlm-tc", "LayoutLMTokenClassifierForQuestionAnswering"),
         ("donut-swin", "DonutSwinModel"),
     ]
 )
@@ -56,13 +53,6 @@ MODEL_FOR_DOCUMENT_QUESTION_ANSWERING_MAPPING = _LazyAutoMapping(
 
 class AutoModelForDocumentQuestionAnswering(_BaseAutoModelClass):
     _model_mapping = MODEL_FOR_DOCUMENT_QUESTION_ANSWERING_MAPPING
-
-
-AutoConfig.register("layoutlm-tc", LayoutLMTokenClassifierConfig)
-AutoModel.register(LayoutLMTokenClassifierConfig, LayoutLMTokenClassifierForQuestionAnswering)
-AutoModelForDocumentQuestionAnswering.register(
-    LayoutLMTokenClassifierConfig, LayoutLMTokenClassifierForQuestionAnswering
-)
 
 
 PIPELINE_REGISTRY.register_pipeline(
@@ -103,10 +93,7 @@ def pipeline(
     # be a clever way to get around this. Either way, we should be able to remove it once
     # https://github.com/huggingface/transformers/commit/5c4c869014f5839d04c1fd28133045df0c91fd84
     # is officially released.
-    if model == "impira/layoutlm-document-qa":
-        config = LayoutLMConfig.from_pretrained(model, revision=revision)
-    else:
-        config = AutoConfig.from_pretrained(model, revision=revision)
+    config = AutoConfig.from_pretrained(model, revision=revision)
 
     if tokenizer is None:
         tokenizer = AutoTokenizer.from_pretrained(
@@ -115,8 +102,8 @@ def pipeline(
             config=config,
         )
 
-    if model == "impira/layoutlm-document-qa":
-        model = LayoutLMForQuestionAnswering.from_pretrained(model, revision=revision)
+    if any(a == "LayoutLMForQuestionAnswering" for a in config.architectures):
+        model = LayoutLMForQuestionAnswering.from_pretrained(model, config=config, revision=revision)
 
     if config.model_type == "vision-encoder-decoder":
         # This _should_ be a feature of transformers -- deriving the feature_extractor automatically --
