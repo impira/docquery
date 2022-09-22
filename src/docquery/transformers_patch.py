@@ -102,7 +102,7 @@ def pipeline(
             config=config,
         )
 
-    if len(config.architectures) > 0 and config.architectures[0] == "LayoutLMForQuestionAnswering":
+    if any(a == "LayoutLMForQuestionAnswering" for a in config.architectures):
         model = LayoutLMForQuestionAnswering.from_pretrained(model, config=config, revision=revision)
 
     if config.model_type == "vision-encoder-decoder":

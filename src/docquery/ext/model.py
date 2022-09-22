@@ -33,11 +33,11 @@ class LayoutLMForQuestionAnswering(LayoutLMPreTrainedModel):
         self.layoutlm = LayoutLMModel(config)
         self.qa_outputs = nn.Linear(config.hidden_size, config.num_labels)
 
-        # NOTE: We have to use hasattr() here because we do not patch the LayoutLMConfig
+        # NOTE: We have to use getattr() here because we do not patch the LayoutLMConfig
         # class to have these extra attributes, so existing LayoutLM models may not have
         # them in their configuration.
         self.token_classifier_head = None
-        if hasattr(self.config, "token_classification") and self.config.token_classification:
+        if getattr(self.config, "token_classification", False):
             self.token_classifier_head = nn.Linear(config.hidden_size, 2)
 
         # Initialize weights and apply final processing
@@ -160,7 +160,7 @@ class LayoutLMForQuestionAnswering(LayoutLMPreTrainedModel):
             total_loss = (start_loss + end_loss) / 2
 
         token_logits = None
-        if hasattr(self.config, "token_classification") and self.config.token_classification:
+        if getattr(self.config, "token_classification", False):
             token_logits = self.token_classifier_head(sequence_output)
 
             if token_labels is not None:
