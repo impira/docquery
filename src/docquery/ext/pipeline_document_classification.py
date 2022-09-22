@@ -4,22 +4,13 @@
 import re
 from typing import List, Optional, Tuple, Union
 
-import numpy as np
 import torch
 from transformers.pipelines.base import PIPELINE_INIT_ARGS, ChunkPipeline
 from transformers.pipelines.text_classification import ClassificationFunction, sigmoid, softmax
-from transformers.utils import (
-    ExplicitEnum,
-    add_end_docstrings,
-    is_tf_available,
-    is_torch_available,
-    is_vision_available,
-    logging,
-    requires_backends,
-)
+from transformers.utils import ExplicitEnum, add_end_docstrings, logging
 
 from .pipeline_document_question_answering import ImageOrName, apply_tesseract
-from .qa_helpers import TESSERACT_LOADED, VISION_LOADED, Image, load_image, pytesseract, select_starts_ends
+from .qa_helpers import TESSERACT_LOADED, VISION_LOADED, load_image
 
 
 logger = logging.get_logger(__name__)
@@ -107,7 +98,6 @@ class DocumentClassificationPipeline(ChunkPipeline):
         max_seq_len=None,
         function_to_apply=None,
         top_k=None,
-        **kwargs,
     ):
         preprocess_params, postprocess_params = {}, {}
         if doc_stride is not None:
@@ -138,9 +128,8 @@ class DocumentClassificationPipeline(ChunkPipeline):
 
         # TODO
         """
-        # XXX Refactor this or combine with document_question_answering
         if isinstance(image, list):
-            normalized_images = (i if isinstance(i, tuple) or isinstance(i, list) else (i, None) for i in image)
+            normalized_images = (i if isinstance(i, (tuple, list)) else (i, None) for i in image)
         else:
             normalized_images = [(image, None)]
 

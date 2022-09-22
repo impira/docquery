@@ -19,7 +19,7 @@ from .ext.pipeline_document_question_answering import DocumentQuestionAnsweringP
 
 PIPELINE_DEFAULTS = {
     "document-question-answering": "impira/layoutlm-document-qa",
-    "document-classification": "impira/layoutlm-document-classification",
+    "document-classification": "impira/layoutlm-document-classifier",
 }
 
 # These revisions are pinned so that the "default" experience in DocQuery is both fast (does not
@@ -29,6 +29,7 @@ DEFAULT_REVISIONS = {
     "impira/layoutlm-document-qa": "ff904df",
     "impira/layoutlm-invoices": "783b0c2",
     "naver-clova-ix/donut-base-finetuned-rvlcdip": "5998e9f",
+    # XXX  add impira-document-classifier
 }
 
 MODEL_FOR_DOCUMENT_QUESTION_ANSWERING_MAPPING_NAMES = OrderedDict(
