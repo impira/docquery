@@ -48,9 +48,13 @@ def main(args):
     if pathlib.Path(args.path).is_dir():
         for root, dirs, files in os.walk(args.path):
             for fname in files:
+                if (pathlib.Path(root) / fname).is_dir():
+                    continue
                 paths.append(pathlib.Path(root) / fname)
     else:
         paths.append(args.path)
+
+    nlp = pipeline("document-question-answering", model=args.checkpoint)
 
     docs = []
     for p in paths:
@@ -61,15 +65,20 @@ def main(args):
             log.warning(f"Cannot load {p}: {e}. Skipping...")
 
     log.info("Done loading files. Loading pipeline...")
-    nlp = pipeline("document-question-answering", model=args.checkpoint)
     log.info("Ready to start evaluating!")
 
     if args.classify:
         classify = pipeline("image-classification", model=args.classify_checkpoint)
 
-    max_fname_len = max(len(str(p)) for (p, d) in docs)
+    max_fname_len = max(len(str(p)) for p in paths)
     max_question_len = max(len(q) for q in args.questions) if len(args.questions) > 0 else 0
-    for i, (p, d) in enumerate(docs):
+    for i, p in enumerate(paths):
+        try:
+            d = load_document(str(p), ocr_reader=args.ocr)
+        except UnsupportedDocument as e:
+            log.warning(f"Cannot load {p}: {e}. Skipping...")
+            continue
+
         if i > 0 and len(args.questions) > 1:
             print("")
         if args.classify:
