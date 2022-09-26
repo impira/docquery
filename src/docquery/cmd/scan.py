@@ -36,7 +36,7 @@ def build_parser(subparsers, parent_parser):
     parser.add_argument(
         "--classify-checkpoint",
         default=None,
-        help=f"A custom model checkpoint to use (other than {PIPELINE_DEFAULTS['image-classification']})",
+        help=f"A custom model checkpoint to use (other than {PIPELINE_DEFAULTS['document-classification']})",
     )
 
     parser.set_defaults(func=main)
@@ -68,7 +68,7 @@ def main(args):
     log.info("Ready to start evaluating!")
 
     if args.classify:
-        classify = pipeline("image-classification", model=args.classify_checkpoint)
+        classify = pipeline("document-classification", model=args.classify_checkpoint)
 
     max_fname_len = max(len(str(p)) for p in paths)
     max_question_len = max(len(q) for q in args.questions) if len(args.questions) > 0 else 0
@@ -82,7 +82,7 @@ def main(args):
         if i > 0 and len(args.questions) > 1:
             print("")
         if args.classify:
-            cls = classify(images=d.preview[0])[0]
+            cls = classify(image=d.preview[0])[0]
             print(f"{str(p):<{max_fname_len}} Document Type: {cls['label']}")
 
         for q in args.questions:

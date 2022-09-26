@@ -197,7 +197,7 @@ class DocumentQuestionAnsweringPipeline(ChunkPipeline):
             image = image["image"]
 
         if isinstance(image, list):
-            normalized_images = (i if isinstance(i, tuple) or isinstance(i, list) else (i, None) for i in image)
+            normalized_images = (i if isinstance(i, (tuple, list)) else (i, None) for i in image)
         else:
             normalized_images = [(image, None)]
 
@@ -297,7 +297,6 @@ class DocumentQuestionAnsweringPipeline(ChunkPipeline):
                     padding=padding,
                     max_length=max_seq_len,
                     stride=doc_stride,
-                    return_token_type_ids=True,
                     is_split_into_words=True,
                     truncation="only_second",
                     return_overflowing_tokens=True,
