@@ -69,6 +69,11 @@ def donut_token2json(tokenizer, tokens, is_inner_value=False):
         return [] if is_inner_value else {"text_sequence": tokens}
 
 
+DEFAULT_CLS_BBOX = [1000, 1000, 1000, 1000]
+DEFAULT_SEP_BBOX = [0, 0, 0, 0]
+DEFAULT_PAD_BBOX = [0, 0, 0, 0]
+
+
 @add_end_docstrings(PIPELINE_INIT_ARGS)
 class DocumentClassificationPipeline(ChunkPipeline):
     """
@@ -239,12 +244,14 @@ class DocumentClassificationPipeline(ChunkPipeline):
                         encoding.sequence_ids(span_idx),
                         encoding.word_ids(span_idx),
                     ):
-                        if s == 0:
-                            bbox.append(boxes[w])
+                        if i == self.tokenizer.cls_token_id:
+                            bbox.append(DEFAULT_CLS_BBOX)
                         elif i == self.tokenizer.sep_token_id:
-                            bbox.append([1000] * 4)
+                            bbox.append(DEFAULT_SEP_BBOX)
+                        elif i == self.tokenizer.pad_token_id:
+                            bbox.append(DEFAULT_PAD_BBOX)
                         else:
-                            bbox.append([0] * 4)
+                            bbox.append(boxes[w])
 
                     span_encoding["bbox"] = torch.tensor(bbox).unsqueeze(0)
 
