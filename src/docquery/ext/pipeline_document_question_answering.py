@@ -465,7 +465,7 @@ class DocumentQuestionAnsweringPipeline(ChunkPipeline):
                     predicted_token_classes = (
                         output["token_logits"][
                             0,
-                            start : eend + 1,
+                            start : end + 1,
                         ]
                         .argmax(axis=1)
                         .cpu()
