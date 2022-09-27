@@ -54,35 +54,34 @@ def main(args):
     else:
         paths.append(args.path)
 
-    nlp = pipeline("document-question-answering", model=args.checkpoint)
-
     docs = []
     for p in paths:
         try:
-            docs.append((p, load_document(str(p), ocr_reader=args.ocr)))
             log.info(f"Loading {p}")
+            docs.append((p, load_document(str(p), ocr_reader=args.ocr)))
         except UnsupportedDocument as e:
             log.warning(f"Cannot load {p}: {e}. Skipping...")
 
-    log.info("Done loading files. Loading pipeline...")
-    log.info("Ready to start evaluating!")
+    log.info(f"Done loading {len(docs)} file(s).")
+    if not docs:
+        return
 
+    log.info("Loading pipelines.")
+
+    nlp = pipeline("document-question-answering", model=args.checkpoint)
     if args.classify:
         classify = pipeline("document-classification", model=args.classify_checkpoint)
 
-    max_fname_len = max(len(str(p)) for p in paths)
-    max_question_len = max(len(q) for q in args.questions) if len(args.questions) > 0 else 0
-    for i, p in enumerate(paths):
-        try:
-            d = load_document(str(p), ocr_reader=args.ocr)
-        except UnsupportedDocument as e:
-            log.warning(f"Cannot load {p}: {e}. Skipping...")
-            continue
+    log.info("Ready to start evaluating!")
 
+    max_fname_len = max(len(str(p)) for (p, _) in docs)
+    max_question_len = max(len(q) for q in args.questions) if len(args.questions) > 0 else 0
+    for i, (p, d) in enumerate(docs):
         if i > 0 and len(args.questions) > 1:
             print("")
+
         if args.classify:
-            cls = classify(image=d.preview[0])[0]
+            cls = classify(**d.context)[0]
             print(f"{str(p):<{max_fname_len}} Document Type: {cls['label']}")
 
         for q in args.questions:
