@@ -123,7 +123,6 @@ def pipeline(
         # available, which at the time of writing is not a feature of transformers
         device = 0 if torch.cuda.is_available() else -1
 
-    breakpoint()
     return transformers_pipeline(
         task,
         revision=revision,
