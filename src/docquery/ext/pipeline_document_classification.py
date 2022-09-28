@@ -95,6 +95,7 @@ class DocumentClassificationPipeline(ChunkPipeline):
         doc_stride=None,
         lang: Optional[str] = None,
         tesseract_config: Optional[str] = None,
+        max_num_spans: Optional[int] = None,
         max_seq_len=None,
         function_to_apply=None,
         top_k=None,
@@ -108,6 +109,8 @@ class DocumentClassificationPipeline(ChunkPipeline):
             preprocess_params["lang"] = lang
         if tesseract_config is not None:
             preprocess_params["tesseract_config"] = tesseract_config
+        if max_num_spans is not None:
+            preprocess_params["max_num_spans"] = max_num_spans
 
         if isinstance(function_to_apply, str):
             function_to_apply = ClassificationFunction[function_to_apply.upper()]
@@ -143,6 +146,7 @@ class DocumentClassificationPipeline(ChunkPipeline):
         word_boxes: Tuple[str, List[float]] = None,
         lang=None,
         tesseract_config="",
+        max_num_spans=1,
     ):
         # NOTE: This code mirrors the code in question answering and will be implemented in a follow up PR
         # to support documents with enough tokens that overflow the model's window
@@ -153,6 +157,8 @@ class DocumentClassificationPipeline(ChunkPipeline):
 
         if doc_stride is None:
             doc_stride = min(max_seq_len // 2, 256)
+
+        total_num_spans = 0
 
         for page_idx, (image, word_boxes) in enumerate(input["pages"]):
             image_features = {}
@@ -252,6 +258,10 @@ class DocumentClassificationPipeline(ChunkPipeline):
                         **span_encoding,
                         "page": page_idx,
                     }
+
+                    total_num_spans += 1
+                    if total_num_spans >= max_num_spans:
+                        break
 
     def _forward(self, model_inputs):
         page = model_inputs.pop("page", None)
