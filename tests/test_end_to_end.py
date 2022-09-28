@@ -18,7 +18,7 @@ CHECKPOINTS = {
 
 class QAPair(BaseModel):
     question: str
-    answers: Dict[str, Dict]
+    answers: Dict[str, List[Dict]]
 
 
 class Example(BaseModel):
@@ -36,9 +36,11 @@ EXAMPLES = [
             {
                 "question": "What is the purchase amount?",
                 "answers": {
-                    "LayoutLMv1": {"score": 0.9999, "answer": "$1,000,000,000", "word_ids": [97], "page": 0},
-                    "LayoutLMv1-Invoices": {"score": 0.9997, "answer": "$1,000,000,000", "word_ids": [97], "page": 0},
-                    "Donut": {"answer": "$1,0000,000,00"},
+                    "LayoutLMv1": [{"score": 0.9999, "answer": "$1,000,000,000", "word_ids": [97], "page": 0}],
+                    "LayoutLMv1-Invoices": [
+                        {"score": 0.9997, "answer": "$1,000,000,000", "word_ids": [97], "page": 0}
+                    ],
+                    "Donut": [{"answer": "$1,0000,000,00"}],
                 },
             }
         ],
@@ -50,9 +52,9 @@ EXAMPLES = [
             {
                 "question": "What is the invoice number?",
                 "answers": {
-                    "LayoutLMv1": {"score": 0.9997, "answer": "us-001", "word_ids": [15], "page": 0},
-                    "LayoutLMv1-Invoices": {"score": 0.9999, "answer": "us-001", "word_ids": [15], "page": 0},
-                    "Donut": {"answer": "us-001"},
+                    "LayoutLMv1": [{"score": 0.9997, "answer": "us-001", "word_ids": [15], "page": 0}],
+                    "LayoutLMv1-Invoices": [{"score": 0.9999, "answer": "us-001", "word_ids": [15], "page": 0}],
+                    "Donut": [{"answer": "us-001"}],
                 },
             }
         ],
@@ -64,9 +66,9 @@ EXAMPLES = [
             {
                 "question": "What are net sales for 2020?",
                 "answers": {
-                    "LayoutLMv1": {"score": 0.9429, "answer": "$ 3,750\n", "word_ids": [15, 16], "page": 0},
-                    "LayoutLMv1-Invoices": {"score": 0.9956, "answer": "$ 3,750\n", "word_ids": [15, 16], "page": 0},
-                    "Donut": {"answer": "$ 3,750"},
+                    "LayoutLMv1": [{"score": 0.9429, "answer": "$ 3,750\n", "word_ids": [15, 16], "page": 0}],
+                    "LayoutLMv1-Invoices": [{"score": 0.9956, "answer": "$ 3,750\n", "word_ids": [15, 16], "page": 0}],
+                    "Donut": [{"answer": "$ 3,750"}],
                 },
             }
         ],
@@ -79,19 +81,23 @@ EXAMPLES = [
                 "question": "What are the use cases for DocQuery?",
                 "answers": {
                     # These examples demonstrate the fact that the "word_boxes" are way too coarse in the web document implementation
-                    "LayoutLMv1": {
-                        "score": 0.9921,
-                        "answer": "DocQuery is a swiss army knife tool for working with documents and experiencing the power of modern machine learning. You can use it\njust about anywhere, including behind a firewall on sensitive data, and test it with a wide variety of documents. Our hope is that\nDocQuery enables many creative use cases for document understanding by making it simple and easy to ask questions from your documents.",
-                        "word_ids": [37],
-                        "page": 2,
-                    },
-                    "LayoutLMv1-Invoices": {
-                        "score": 0.9939,
-                        "answer": "DocQuery is a library and command-line tool that makes it easy to analyze semi-structured and unstructured documents (PDFs, scanned\nimages, etc.) using large language models (LLMs). You simply point DocQuery at one or more documents and specify a\nquestion you want to ask. DocQuery is created by the team at ",
-                        "word_ids": [98],
-                        "page": 0,
-                    },
-                    "Donut": {"answer": "engine Powered by large language"},
+                    "LayoutLMv1": [
+                        {
+                            "score": 0.9921,
+                            "answer": "DocQuery is a swiss army knife tool for working with documents and experiencing the power of modern machine learning. You can use it\njust about anywhere, including behind a firewall on sensitive data, and test it with a wide variety of documents. Our hope is that\nDocQuery enables many creative use cases for document understanding by making it simple and easy to ask questions from your documents.",
+                            "word_ids": [37],
+                            "page": 2,
+                        }
+                    ],
+                    "LayoutLMv1-Invoices": [
+                        {
+                            "score": 0.9939,
+                            "answer": "DocQuery is a library and command-line tool that makes it easy to analyze semi-structured and unstructured documents (PDFs, scanned\nimages, etc.) using large language models (LLMs). You simply point DocQuery at one or more documents and specify a\nquestion you want to ask. DocQuery is created by the team at ",
+                            "word_ids": [98],
+                            "page": 0,
+                        }
+                    ],
+                    "Donut": [{"answer": "engine Powered by large language"}],
                 },
             }
         ],

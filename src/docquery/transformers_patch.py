@@ -98,17 +98,20 @@ def pipeline(
     # be a clever way to get around this. Either way, we should be able to remove it once
     # https://github.com/huggingface/transformers/commit/5c4c869014f5839d04c1fd28133045df0c91fd84
     # is officially released.
-    config = AutoConfig.from_pretrained(model, revision=revision)
+    config = AutoConfig.from_pretrained(model, revision=revision, **{**pipeline_kwargs})
 
     if tokenizer is None:
         tokenizer = AutoTokenizer.from_pretrained(
             model,
             revision=revision,
             config=config,
+            **pipeline_kwargs,
         )
 
     if any(a == "LayoutLMForQuestionAnswering" for a in config.architectures):
-        model = LayoutLMForQuestionAnswering.from_pretrained(model, config=config, revision=revision)
+        model = LayoutLMForQuestionAnswering.from_pretrained(
+            model, config=config, revision=revision, **{**pipeline_kwargs}
+        )
 
     if config.model_type == "vision-encoder-decoder":
         # This _should_ be a feature of transformers -- deriving the feature_extractor automatically --
