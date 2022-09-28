@@ -95,6 +95,7 @@ class DocumentClassificationPipeline(ChunkPipeline):
         doc_stride=None,
         lang: Optional[str] = None,
         tesseract_config: Optional[str] = None,
+        max_num_spans: Optional[int] = None,
         max_seq_len=None,
         function_to_apply=None,
         top_k=None,
@@ -108,6 +109,8 @@ class DocumentClassificationPipeline(ChunkPipeline):
             preprocess_params["lang"] = lang
         if tesseract_config is not None:
             preprocess_params["tesseract_config"] = tesseract_config
+        if max_num_spans is not None:
+            preprocess_params["max_num_spans"] = max_num_spans
 
         if isinstance(function_to_apply, str):
             function_to_apply = ClassificationFunction[function_to_apply.upper()]
