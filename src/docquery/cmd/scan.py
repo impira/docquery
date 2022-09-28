@@ -28,6 +28,12 @@ def build_parser(subparsers, parent_parser):
         "--ocr", choices=list(OCR_MAPPING.keys()), default=None, help="The OCR engine you would like to use"
     )
     parser.add_argument(
+        "--ignore-embedded-text",
+        dest="use_embedded_text",
+        action="store_false",
+        help="Do not try and extract embedded text from document types that might provide it (e.g. PDFs)",
+    )
+    parser.add_argument(
         "--classify",
         default=False,
         action="store_true",
@@ -59,7 +65,7 @@ def main(args):
     docs = []
     for p in paths:
         try:
-            docs.append((p, load_document(str(p), ocr_reader=args.ocr)))
+            docs.append((p, load_document(str(p), ocr_reader=args.ocr, use_embedded_text=args.use_embedded_text)))
             log.info(f"Loading {p}")
         except UnsupportedDocument as e:
             log.warning(f"Cannot load {p}: {e}. Skipping...")
