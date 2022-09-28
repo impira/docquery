@@ -101,9 +101,10 @@ class Document(metaclass=abc.ABCMeta):
 
 
 class PDFDocument(Document):
-    def __init__(self, b, ocr_reader, **kwargs):
+    def __init__(self, b, ocr_reader, use_embedded_text, **kwargs):
         self.b = b
         self.ocr_reader = ocr_reader
+        self.use_embedded_text = use_embedded_text
 
         super().__init__(**kwargs)
 
@@ -125,7 +126,7 @@ class PDFDocument(Document):
         boxes_by_page = []
         dimensions_by_page = []
         for i, page in enumerate(pdf.pages):
-            extracted_words = page.extract_words()
+            extracted_words = page.extract_words() if self.use_embedded_text else []
 
             if len(extracted_words) == 0:
                 words, boxes = self.ocr_reader.apply_ocr(images[i])
@@ -234,7 +235,7 @@ class WebDocument(Document):
 
 
 @validate_arguments
-def load_document(fpath: str, ocr_reader: Optional[Union[str, OCRReader]] = None):
+def load_document(fpath: str, ocr_reader: Optional[Union[str, OCRReader]] = None, use_embedded_text=True):
     base_path = os.path.basename(fpath).split("?")[0].strip()
     doc_type = mimetypes.guess_type(base_path)[0]
     if fpath.startswith("http://") or fpath.startswith("https://"):
@@ -255,7 +256,7 @@ def load_document(fpath: str, ocr_reader: Optional[Union[str, OCRReader]] = None
         raise NoOCRReaderFound(f"{ocr_reader} is not a supported OCRReader class")
 
     if doc_type == "application/pdf":
-        return PDFDocument(b.read(), ocr_reader=ocr_reader)
+        return PDFDocument(b.read(), ocr_reader=ocr_reader, use_embedded_text=use_embedded_text)
     elif doc_type == "text/html":
         return WebDocument(fpath)
     else:

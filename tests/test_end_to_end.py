@@ -67,6 +67,11 @@ EXAMPLES = [
                 "question": "What are net sales for 2020?",
                 "answers": {
                     "LayoutLMv1": [{"score": 0.9429, "answer": "$ 3,750\n", "word_ids": [15, 16], "page": 0}],
+                    # (The answer with `use_embedded_text=False` relies entirely on Tesseract, and it is incorrect because it
+                    # misses 3,750 altogether.)
+                    "LayoutLMv1__use_embedded_text=False": [
+                        {"score": 0.3078, "answer": "$ 3,980", "word_ids": [11, 12], "page": 0}
+                    ],
                     "LayoutLMv1-Invoices": [{"score": 0.9956, "answer": "$ 3,750\n", "word_ids": [15, 16], "page": 0}],
                     "Donut": [{"answer": "$ 3,750"}],
                 },
@@ -132,3 +137,12 @@ def test_run_with_choosen_OCR_instance():
     for qa in example.qa_pairs:
         resp = pipe(question=qa.question, **document.context, top_k=1)
         assert nested_simplify(resp, decimals=4) == qa.answers["LayoutLMv1"]
+
+
+def test_run_with_ignore_embedded_text():
+    example = EXAMPLES[2]
+    document = load_document(example.path, use_embedded_text=False)
+    pipe = pipeline("document-question-answering", model=CHECKPOINTS["LayoutLMv1"])
+    for qa in example.qa_pairs:
+        resp = pipe(question=qa.question, **document.context, top_k=1)
+        assert nested_simplify(resp, decimals=4) == qa.answers["LayoutLMv1__use_embedded_text=False"]
