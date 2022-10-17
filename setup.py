@@ -20,7 +20,7 @@ install_requires = [
     "pytesseract",  # TODO: Test what happens if the host machine does not have tesseract installed
     "requests",
     "easyocr",
-    "transformers >= 4.21",
+    "transformers >= 4.23",
 ]
 extras_require = {
     "dev": [

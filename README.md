@@ -87,13 +87,13 @@ DocQuery is intended to have a small install footprint and be simple to work wit
 
 ### Using Donut 🍩
 
-If you'd like to test `docquery` with [Donut](https://arxiv.org/abs/2111.15664), you must install a special version of transformers:
+If you'd like to test `docquery` with [Donut](https://arxiv.org/abs/2111.15664), you must install the required extras:
 
 ```bash
-pip install git+https://github.com/impira/transformers@153d1361c7dcc91c7735cae73e1f594cfcab3e21
+pip install docquery[donut]
 ```
 
-since it has not yet been released in a tagged release. You can then run
+You can then run
 
 ```bash
 docquery scan "What is the effective date?" /path/to/contracts/folder --checkpoint 'naver-clova-ix/donut-base-finetuned-docvqa'
