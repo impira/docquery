@@ -53,7 +53,7 @@ that makes it simple to ask questions of documents and (2) a `Document` abstract
 to feed into the pipeline.
 
 ```python
->>> from docquery import document, pipeline
+>>> from docqa import document, pipeline
 >>> p = pipeline('document-question-answering')
 >>> doc = document.load_document("/path/to/document.pdf")
 >>> for q in ["What is the invoice number?", "What is the invoice total?"]:
