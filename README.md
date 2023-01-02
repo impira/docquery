@@ -54,7 +54,7 @@ to feed into the pipeline.
 
 ```python
 >>> from docqa import document, pipeline
->>> p = pipeline('document-question-answering')
+>>> p = pipeline.get_pipeline()
 >>> doc = document.load_document("/path/to/document.pdf")
 >>> for q in ["What is the invoice number?", "What is the invoice total?"]:
 ...     print(q, p(question=q, **doc.context))
