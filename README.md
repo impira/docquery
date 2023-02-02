@@ -1,5 +1,7 @@
 <div align="center">
 
+NOTE: DocQuery is not actively maintained anymore. We still welcome contributions and discussions among the community!
+
 # DocQuery: Document Query Engine Powered by Large Language Models
 
 [![Demo](https://img.shields.io/badge/Demo-Gradio-brightgreen)](https://huggingface.co/spaces/impira/docquery)
